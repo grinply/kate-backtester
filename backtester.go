@@ -28,7 +28,7 @@ const (
 )
 
 func NewBacktester(mystrategy Strategy, options BacktestOptions) *Backtester {
-
+	return nil
 }
 
 func (bt *Backtester) Run() *Stratistics {
