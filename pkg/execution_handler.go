@@ -109,7 +109,7 @@ func (handler *ExchangeHandler) SetTakeProfit(price float64) error {
 		return fmt.Errorf("the takeprofit must be lower than the current price for short positions")
 	}
 
-	handler.openPosition.Takeprofit = price
+	handler.openPosition.TakeProfit = price
 	return nil
 }
 
@@ -141,7 +141,7 @@ func (handler *ExchangeHandler) checkCloseShorts(newPrice float64) bool {
 		return false
 	}
 
-	if newPrice <= handler.openPosition.Takeprofit {
+	if newPrice <= handler.openPosition.TakeProfit {
 		handler.closePosition(newPrice, handler.limitFee())
 		return true
 	}
@@ -158,7 +158,7 @@ func (handler *ExchangeHandler) checkCloseLongs(newPrice float64) bool {
 		return false
 	}
 
-	if newPrice >= handler.openPosition.Takeprofit {
+	if newPrice >= handler.openPosition.TakeProfit {
 		handler.closePosition(newPrice, handler.limitFee())
 		return true
 	}

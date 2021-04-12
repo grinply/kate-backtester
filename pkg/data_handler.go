@@ -27,7 +27,7 @@ type Position struct {
 	Leverage             uint
 	Margin, EntryPrice   float64
 	ClosePrice           float64
-	Stoploss, Takeprofit float64
+	Stoploss, TakeProfit float64
 	UnrealizedPNL        float64
 	RealizedPNL          float64
 	TotalFeePaid         float64

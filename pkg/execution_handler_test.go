@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const maxError = 0.0000001
+const maxError = 0.000001
 
 //Fees based on Binance VIP 0 without discount- https://www.binance.com/en/support/faq/360033544231
 func TestCreateExchangeHandler(t *testing.T) {
@@ -27,64 +27,55 @@ func TestCreateExchangeHandler(t *testing.T) {
 	}
 }
 
-func TestCloseLongPositionInProfit(t *testing.T) {
-	var leverage uint = 5
-	handler := NewExchangeHandler(USDFutures, 0.020, 0.040, 1)
-	handler.SetBalance(100)
-	handler.onPriceChange(100)
-	handler.OpenMarketOrder(LONG, leverage)
-
-	handler.SetTakeProfit(120)
-	handler.SetStoploss(90)
-
-	handler.onPriceChange(110)
-	handler.onPriceChange(123)
-
-	if handler.openPosition != nil || len(handler.tradeHistory) != 1 {
-		t.Errorf("The position didnt close properly")
+func TestOpenCloseUSDPosition(t *testing.T) {
+	var tests = []struct {
+		direction            Direction
+		leverage             uint
+		prices               []float64
+		makerFee, TakerFee   float64
+		takeProfit, stoploss float64
+		percentagePerTrade   float64
+		expectedPosition     Position
+	}{
+		{LONG, 17, []float64{100, 110, 123}, 0.020, 0.040, 120, 90, 1, Position{
+			RealizedPNL: 390.9898, Size: 17, Margin: 1, TakeProfit: 120, Stoploss: 90, Direction: LONG, TotalFeePaid: 0.0102,
+		}},
+		{LONG, 0, []float64{90, 110, 123, 130}, 0.020, 0.040, 130, 80, 1, Position{
+			RealizedPNL: 39.9994, Size: 1, Margin: 1, TakeProfit: 130, Stoploss: 80, Direction: LONG, TotalFeePaid: 0.0006,
+		}},
+		{SHORT, 0, []float64{100, 100, 90, 75}, 0.020, 0.040, 75, 120, 1, Position{
+			RealizedPNL: 24.9994, Size: 1, Margin: 1, TakeProfit: 75, Stoploss: 120, Direction: SHORT, TotalFeePaid: 0.0006,
+		}},
 	}
 
-	expectedPNL := 114.997
-	tradedPosition := handler.tradeHistory[0]
-	if handler.tradeHistory[0].RealizedPNL != expectedPNL {
-		t.Errorf("The realized pnl is not the expected value, expected %v received %v",
-			expectedPNL, handler.tradeHistory[0].RealizedPNL)
-	}
+	for _, test := range tests {
+		handler := NewExchangeHandler(USDFutures, test.makerFee, test.TakerFee, test.percentagePerTrade)
+		handler.SetBalance(100)
+		handler.onPriceChange(test.prices[0])
 
-	if tradedPosition.Size != 5 || tradedPosition.Margin != 1 || !isDifferent(tradedPosition.TotalFeePaid, 0.003) ||
-		tradedPosition.Stoploss != 90 || tradedPosition.Takeprofit != 120 || tradedPosition.Direction != LONG {
-		t.Errorf("The traded position finished containing wrong values")
-	}
-}
+		handler.OpenMarketOrder(test.direction, test.leverage)
+		handler.SetTakeProfit(test.takeProfit)
+		handler.SetStoploss(test.stoploss)
 
-func TestCloseShortPositionInProfit(t *testing.T) {
-	handler := NewExchangeHandler(USDFutures, 0.020, 0.040, 1)
-	handler.SetBalance(100)
-	handler.onPriceChange(100)
-	handler.OpenMarketOrder(SHORT, 0)
+		for _, latestPrice := range test.prices[1:] {
+			handler.onPriceChange(latestPrice)
+		}
 
-	handler.SetTakeProfit(80)
-	handler.SetStoploss(120)
+		if handler.openPosition != nil || len(handler.tradeHistory) != 1 {
+			t.Errorf("The position didnt close properly")
+		}
 
-	handler.onPriceChange(110)
-	handler.onPriceChange(100)
-	handler.onPriceChange(90)
-	handler.onPriceChange(75)
+		resultPosition := handler.tradeHistory[0]
 
-	if handler.openPosition != nil || len(handler.tradeHistory) != 1 {
-		t.Errorf("The position didnt close properly")
-	}
-
-	expectedPNL := 24.9994
-	tradedPosition := handler.tradeHistory[0]
-	if tradedPosition.RealizedPNL != expectedPNL {
-		t.Errorf("The realized pnl is not the expected value, expected %v received %v",
-			expectedPNL, tradedPosition.RealizedPNL)
-	}
-
-	if tradedPosition.Size != 1 || tradedPosition.Margin != 1 || !isDifferent(tradedPosition.TotalFeePaid, 0.0006) ||
-		tradedPosition.Stoploss != 120 || tradedPosition.Takeprofit != 80 || tradedPosition.Direction != SHORT {
-		t.Errorf("The traded position finished containing wrong values")
+		if resultPosition.Size != test.expectedPosition.Size || resultPosition.Margin != test.expectedPosition.Margin ||
+			!isDifferent(resultPosition.TotalFeePaid, test.expectedPosition.TotalFeePaid) ||
+			resultPosition.Stoploss != test.expectedPosition.Stoploss ||
+			resultPosition.RealizedPNL != test.expectedPosition.RealizedPNL ||
+			resultPosition.TakeProfit != test.expectedPosition.TakeProfit ||
+			resultPosition.Direction != test.expectedPosition.Direction {
+			t.Errorf("The traded position finished containing wrong values\nThe expected position is:\n%+v The result was:\n%+v",
+				test.expectedPosition, resultPosition)
+		}
 	}
 }
 
