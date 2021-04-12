@@ -22,7 +22,7 @@ func NewBacktester(mystrategy Strategy, options BacktestOptions) *Backtester {
 }
 
 func (bt *Backtester) Run() *Statistics {
-	if bt.dataHandler.
+	//if bt.dataHandler.x
 	var datapoints *AggregatedDataPoints
 
 	for processed := bt.processNextEvent(); !processed && datapoints == nil; {
@@ -45,12 +45,12 @@ func (bt *Backtester) processNextEvent() bool {
 		return false
 	}
 
-	switch event := bt.eventQueue.NextEvent().(type) {
+	switch bt.eventQueue.NextEvent().(type) {
 	case DataPoint:
 		//Process new tick data from the data stream
 	case Order:
 		//Process a new request order to exchange
-	case Fill:
+		//case Fill:
 		//Processs the order being filled (matched) on the exchange
 	}
 
@@ -58,7 +58,7 @@ func (bt *Backtester) processNextEvent() bool {
 }
 
 func (bt *Backtester) processLatestPrice(latestPriceData []DataPoint) {
-	bt.exchangeHandler.ProcessLatestPrice(&latestPriceData[len(latestPriceData)-1])
+	//bt.exchangeHandler.ProcessLatestPrice(&latestPriceData[len(latestPriceData)-1])
 	bt.myStrategy.ProcessNextPriceData(latestPriceData)
 	bt.myStrategy.SetStoploss(*bt.exchangeHandler.openPosition)
 	bt.myStrategy.SetTakeProfit(*bt.exchangeHandler.openPosition)
