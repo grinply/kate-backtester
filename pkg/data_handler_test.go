@@ -11,7 +11,7 @@ import (
 
 func TestLoadCSVData(t *testing.T) {
 	handler := &DataHandler{}
-	handler.LoadPricesFromCSV("simple_example.csv")
+	handler.LoadPricesFromCSV("../testdata/simple_example.csv")
 
 	if len(handler.prices) != 100 {
 		t.Errorf("The amount of prices is %v the expected amount is 100", len(handler.prices))
