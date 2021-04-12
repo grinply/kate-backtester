@@ -12,10 +12,12 @@ import (
 )
 
 type DataHandler struct {
-	prices []DataPoint
+	counter, windowSize int
+	prices              []DataPoint
 }
 
 type DataPoint struct {
+	Event
 	Open, High, Low, Close, Volume float64
 }
 
@@ -25,12 +27,23 @@ type Position struct {
 	UnrealizedPNL        float64
 }
 
+type AggregatedDataPoints struct {
+	Event
+	datapoints []DataPoint
+}
+
 //Required columns in the CSV file
 var csvColumns = []string{"open", "high", "low", "close", "volume"}
 
-//NextValue returns the next value in the stream of datapoints, a null return value denotes the end of the stream
-func (handler *DataHandler) NextValue() *DataPoint {
-	return &DataPoint{}
+//NextValues returns AggregatedDataPoints with the next values in the stream of datapoints (containing the lastest windowSize of values).
+//a nil return denotes the end for the stream
+func (handler *DataHandler) NextValues() *AggregatedDataPoints {
+	if handler.counter < len(handler.prices) {
+		return &AggregatedDataPoints{
+			datapoints: handler.prices[handler.counter-handler.windowSize : handler.counter],
+		}
+	}
+	return nil
 }
 
 //LoadPricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error ocurred
@@ -72,8 +85,14 @@ func (handler *DataHandler) LoadPricesFromCSV(csvFilePath string) error {
 		})
 	}
 
-	handler.prices = prices
+	handler.initData(prices)
 	return nil
+}
+
+//initData initializes the DataHandler with pricing data and executes the required setup
+func (handler *DataHandler) initData(prices []DataPoint) {
+	handler.prices = prices
+	handler.counter = handler.windowSize
 }
 
 //strToFloat converts a string value to float64, in case of error Panic
@@ -87,6 +106,7 @@ func strToFloat(str string) (float64, error) {
 
 }
 
+//Check if the first line with columns of the csv are in the valid format
 func isCSVHeaderValid(firstLine []string) bool {
 	for i, column := range csvColumns {
 		if strings.ToLower(firstLine[i]) != column {

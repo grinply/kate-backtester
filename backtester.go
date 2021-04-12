@@ -1,6 +1,7 @@
 package main
 
 type Backtester struct {
+	eventQueue      EventQueue
 	myStrategy      Strategy
 	exchangeHandler *ExchangeHandler
 	dataHandler     *DataHandler
@@ -13,44 +14,47 @@ type BacktestOptions struct {
 	Slipage, TradeFee float64
 }
 
-type Stratistics struct {
-	ROI         float64
-	SharpeRatio float64
-	TotalTrades uint
-	WinRate     float64 //Percentage of wins
-	MaxDrawdown float64 //Percentage for the maximum drawdown after applying the strategy
-}
-
-type Event int
-
-const (
-	FILL Event = iota
-)
+//Event represents a action that will be processed by the eventloop
+type Event interface{}
 
 func NewBacktester(mystrategy Strategy, options BacktestOptions) *Backtester {
 	return nil
 }
 
-func (bt *Backtester) Run() *Stratistics {
-	var eventList []Event
-	var latestPriceData []DataPoint
+func (bt *Backtester) Run() *Statistics {
+	if bt.dataHandler.
+	var datapoints *AggregatedDataPoints
 
-	for priceTick := bt.dataHandler.NextValue(); priceTick != nil && len(latestPriceData) < bt.priceWindow; {
-		latestPriceData = append(latestPriceData, *priceTick)
-	}
-
-	for priceTick := bt.dataHandler.NextValue(); priceTick != nil; {
-		latestPriceData = append(latestPriceData[1:], *priceTick)
-
-		switch event := eventList[0]; event {
-		case FILL:
-			//Effectivelly executes the order on the exchange handler
-		default:
-			bt.processLatestPrice(latestPriceData)
+	for processed := bt.processNextEvent(); !processed && datapoints == nil; {
+		if datapoints = bt.dataHandler.NextValues(); !processed && datapoints != nil {
+			bt.eventQueue.AddEvent(datapoints)
 		}
 	}
+	return bt.calculateStatistics()
+}
 
-	return &Stratistics{}
+func (bt *Backtester) calculateStatistics() *Statistics {
+	//TODO: calculate the statistics after each execution
+	return nil
+}
+
+//processNextEvent process the next event in the queue if the queue is not empty.
+//returns a bool indicating if the event was processed or not
+func (bt *Backtester) processNextEvent() bool {
+	if !bt.eventQueue.HasNext() {
+		return false
+	}
+
+	switch event := bt.eventQueue.NextEvent().(type) {
+	case DataPoint:
+		//Process new tick data from the data stream
+	case Order:
+		//Process a new request order to exchange
+	case Fill:
+		//Processs the order being filled (matched) on the exchange
+	}
+
+	return false
 }
 
 func (bt *Backtester) processLatestPrice(latestPriceData []DataPoint) {
