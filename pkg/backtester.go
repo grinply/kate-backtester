@@ -5,28 +5,34 @@ type Backtester struct {
 	myStrategy      Strategy
 	exchangeHandler *ExchangeHandler
 	dataHandler     *DataHandler
-	priceWindow     int
 }
 
 type BacktestOptions struct {
-	priceWindow       uint
-	market            MarketType
-	Slipage, TradeFee float64
+	PriceWindow        uint
+	Market             MarketType
+	Slipage            float64
+	MakerFeePercentage float64
+	TakerFeePercentage float64
+	percentagePerTrade float64
 }
 
 //Event represents a action that will be processed by the eventloop
 type Event interface{}
 
 func NewBacktester(mystrategy Strategy, options BacktestOptions) *Backtester {
-	return nil
+	exchangeHandler := NewExchangeHandler(options.Market, options.MakerFeePercentage, options.TakerFeePercentage,
+		options.percentagePerTrade)
+	return &Backtester{
+		exchangeHandler: exchangeHandler,
+		myStrategy:      mystrategy,
+	}
 }
 
 func (bt *Backtester) Run() *Statistics {
-	//if bt.dataHandler.x
-	var datapoints *AggregatedDataPoints
+	var datapoints = bt.dataHandler.nextValues()
 
 	for processed := bt.processNextEvent(); !processed && datapoints == nil; {
-		if datapoints = bt.dataHandler.NextValues(); !processed && datapoints != nil {
+		if datapoints = bt.dataHandler.nextValues(); datapoints != nil {
 			bt.eventQueue.AddEvent(datapoints)
 		}
 	}
@@ -45,21 +51,16 @@ func (bt *Backtester) processNextEvent() bool {
 		return false
 	}
 
-	switch bt.eventQueue.NextEvent().(type) {
+	switch event := bt.eventQueue.NextEvent().(type) {
 	case DataPoint:
-		//Process new tick data from the data stream
-	case Order:
-		//Process a new request order to exchange
-		//case Fill:
-		//Processs the order being filled (matched) on the exchange
+		bt.exchangeHandler.onPriceChange(event.Close)
+	case OpenPositionEvt:
+		bt.exchangeHandler.OpenMarketOrder(event.direction, event.leverage)
+	case StoplossEvt:
+		bt.exchangeHandler.SetStoploss(event.price)
+	case TakeProfitEvt:
+		bt.exchangeHandler.SetTakeProfit(event.price)
 	}
 
-	return false
-}
-
-func (bt *Backtester) processLatestPrice(latestPriceData []DataPoint) {
-	//bt.exchangeHandler.ProcessLatestPrice(&latestPriceData[len(latestPriceData)-1])
-	bt.myStrategy.ProcessNextPriceData(latestPriceData)
-	bt.myStrategy.SetStoploss(*bt.exchangeHandler.openPosition)
-	bt.myStrategy.SetTakeProfit(*bt.exchangeHandler.openPosition)
+	return true
 }

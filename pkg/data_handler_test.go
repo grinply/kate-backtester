@@ -10,8 +10,7 @@ import (
 )
 
 func TestLoadCSVData(t *testing.T) {
-	handler := &DataHandler{}
-	handler.LoadPricesFromCSV("../testdata/simple_example.csv")
+	handler, _ := PricesFromCSV("../testdata/simple_example.csv")
 
 	if len(handler.prices) != 100 {
 		t.Errorf("The amount of prices is %v the expected amount is 100", len(handler.prices))
@@ -54,8 +53,6 @@ func TestLoadCSVData(t *testing.T) {
 }
 
 func TestLoadInvalidCSV(t *testing.T) {
-	handler := &DataHandler{}
-
 	columnsCSV := []string{"ERROR,Open,High,Low,Close,Volume", "Open,ERROR,High,Low,Close,Volume",
 		"Open,High,ERROR,Low,Close,Volume", "Open,High,Low,ERROR,Close,Volume", "Open,High,Low,Close,ERROR,Volume",
 		"ERRORHigh,Low,Close,Volume", "Open,ERRORHigh,Low,Close,Volume", "Open,High,ERRORLow,Close,Volume",
@@ -67,7 +64,7 @@ func TestLoadInvalidCSV(t *testing.T) {
 		defer os.Remove(unkownColumnCSV.Name())
 		unkownColumnCSV.WriteString(columnLine)
 
-		if err := handler.LoadPricesFromCSV(unkownColumnCSV.Name()); err == nil {
+		if _, err := PricesFromCSV(unkownColumnCSV.Name()); err == nil {
 			t.Errorf("A error was expected when loading a csv containing a unkown column")
 		}
 	}
@@ -78,7 +75,7 @@ func TestLoadInvalidCSV(t *testing.T) {
 	invalidNumberCSV.WriteString("Open,High,Low,Close,Volume\n")
 	invalidNumberCSV.WriteString("746.25,747.25,746.2,746.95,1045532\n746.95,xpto,746.8,747.05,351191")
 
-	if err := handler.LoadPricesFromCSV(invalidNumberCSV.Name()); err == nil ||
+	if _, err := PricesFromCSV(invalidNumberCSV.Name()); err == nil ||
 		!strings.Contains(err.Error(), "xpto") {
 		t.Errorf("A error was expected containing the invalid parameter 'xpto', provided error msg was:\n%v", err.Error())
 	}

@@ -7,18 +7,22 @@ type OrderType int
 const (
 	MARKET OrderType = iota
 	LIMIT
-	STOPLIMIT
-	STOPMARKET
-	TRAILINGSTOP
 )
 
 //Order is a request of execution based on certain conditions to the exchange
-type Order struct {
+type OpenPositionEvt struct {
 	Event
-	id, leverage         uint
-	direction            Direction
-	orderType            OrderType
-	totalQty             float64 //total value of the position including leverage
-	margin, entryPrice   float64
-	stoploss, takeprofit float64
+	direction Direction
+	leverage  uint
+	orderType OrderType
+}
+
+type StoplossEvt struct {
+	Event
+	price float64
+}
+
+type TakeProfitEvt struct {
+	Event
+	price float64
 }

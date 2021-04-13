@@ -43,7 +43,7 @@ var csvColumns = []string{"open", "high", "low", "close", "volume"}
 
 //NextValues returns AggregatedDataPoints with the next values in the stream of datapoints (containing the lastest windowSize of values).
 //a nil return denotes the end for the stream
-func (handler *DataHandler) NextValues() *AggregatedDataPoints {
+func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 	if handler.counter < len(handler.prices) {
 		return &AggregatedDataPoints{
 			datapoints: handler.prices[handler.counter-handler.windowSize : handler.counter],
@@ -53,13 +53,13 @@ func (handler *DataHandler) NextValues() *AggregatedDataPoints {
 }
 
 //LoadPricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error ocurred
-func (handler *DataHandler) LoadPricesFromCSV(csvFilePath string) error {
+func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 	csvFile, _ := os.Open(csvFilePath)
 	reader := csv.NewReader(bufio.NewReader(csvFile))
 
 	//Reading first line header and validating the required columns
 	if line, error := reader.Read(); error != nil || !isCSVHeaderValid(line) {
-		return fmt.Errorf(`error reading header with columns in the csv.
+		return nil, fmt.Errorf(`error reading header with columns in the csv.
 				Make sure the CSV has the columns Open, High, Low, Close, Volume`)
 	}
 
@@ -76,7 +76,7 @@ func (handler *DataHandler) LoadPricesFromCSV(csvFilePath string) error {
 		var numbers [5]float64
 		for i := 0; i < 5; i++ {
 			if value, err := strToFloat(line[i]); err != nil {
-				return err
+				return nil, err
 			} else {
 				numbers[i] = value
 			}
@@ -91,8 +91,9 @@ func (handler *DataHandler) LoadPricesFromCSV(csvFilePath string) error {
 		})
 	}
 
+	handler := &DataHandler{}
 	handler.initData(prices)
-	return nil
+	return handler, nil
 }
 
 //initData initializes the DataHandler with pricing data and executes the required setup
@@ -109,7 +110,6 @@ func strToFloat(str string) (float64, error) {
 		return -1, fmt.Errorf(`invalid parameter '%v' was found in the provided csv. 
 		Make sure the csv contain only valid float numbers`, str)
 	}
-
 }
 
 //Check if the first line with columns of the csv are in the valid format
