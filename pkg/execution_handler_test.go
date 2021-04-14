@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"math"
@@ -31,19 +31,19 @@ func TestOpenCloseUSDPosition(t *testing.T) {
 	var tests = []struct {
 		direction            Direction
 		leverage             uint
-		prices               []float64
+		prices               []DataPoint
 		makerFee, TakerFee   float64
 		takeProfit, stoploss float64
 		percentagePerTrade   float64
 		expectedPosition     Position
 	}{
-		{LONG, 17, []float64{100, 110, 123}, 0.020, 0.040, 120, 90, 1, Position{
+		{LONG, 17, []DataPoint{CreateData(100), CreateData(110), CreateData(123)}, 0.020, 0.040, 120, 90, 1, Position{
 			RealizedPNL: 390.9898, Size: 17, Margin: 1, TakeProfit: 120, Stoploss: 90, Direction: LONG, TotalFeePaid: 0.0102,
 		}},
-		{LONG, 0, []float64{90, 110, 123, 130}, 0.020, 0.040, 130, 80, 1, Position{
+		{LONG, 0, []DataPoint{CreateData(90), CreateData(110), CreateData(130)}, 0.020, 0.040, 130, 80, 1, Position{
 			RealizedPNL: 39.9994, Size: 1, Margin: 1, TakeProfit: 130, Stoploss: 80, Direction: LONG, TotalFeePaid: 0.0006,
 		}},
-		{SHORT, 0, []float64{100, 100, 90, 75}, 0.020, 0.040, 75, 120, 1, Position{
+		{SHORT, 0, []DataPoint{CreateData(100), CreateData(90), CreateData(75)}, 0.020, 0.040, 75, 120, 1, Position{
 			RealizedPNL: 24.9994, Size: 1, Margin: 1, TakeProfit: 75, Stoploss: 120, Direction: SHORT, TotalFeePaid: 0.0006,
 		}},
 	}
@@ -81,4 +81,8 @@ func TestOpenCloseUSDPosition(t *testing.T) {
 
 func isDifferent(x, y float64) bool {
 	return math.Abs(x-y) < maxError
+}
+
+func CreateData(value float64) DataPoint {
+	return DataPoint{Open: value, High: value, Low: value, Close: value, Volume: value}
 }

@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"bufio"
@@ -31,6 +31,7 @@ type Position struct {
 	UnrealizedPNL        float64
 	RealizedPNL          float64
 	TotalFeePaid         float64
+	LiquidationPrice     float64
 }
 
 type AggregatedDataPoints struct {
@@ -41,13 +42,24 @@ type AggregatedDataPoints struct {
 //Required columns in the CSV file
 var csvColumns = []string{"open", "high", "low", "close", "volume"}
 
+//newDataHandler creates and initializes a DataHandler with pricing data and executes the required setup
+func newDataHandler(prices []DataPoint, windowSize int) *DataHandler {
+	return &DataHandler{
+		windowSize: windowSize,
+		prices:     prices,
+		counter:    windowSize,
+	}
+}
+
 //NextValues returns AggregatedDataPoints with the next values in the stream of datapoints (containing the lastest windowSize of values).
 //a nil return denotes the end for the stream
 func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 	if handler.counter < len(handler.prices) {
-		return &AggregatedDataPoints{
+		data := &AggregatedDataPoints{
 			datapoints: handler.prices[handler.counter-handler.windowSize : handler.counter],
 		}
+		handler.counter++
+		return data
 	}
 	return nil
 }
@@ -91,15 +103,7 @@ func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 		})
 	}
 
-	handler := &DataHandler{}
-	handler.initData(prices)
-	return handler, nil
-}
-
-//initData initializes the DataHandler with pricing data and executes the required setup
-func (handler *DataHandler) initData(prices []DataPoint) {
-	handler.prices = prices
-	handler.counter = handler.windowSize
+	return newDataHandler(prices, 5), nil
 }
 
 //strToFloat converts a string value to float64, in case of error Panic

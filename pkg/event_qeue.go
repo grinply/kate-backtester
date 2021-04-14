@@ -1,11 +1,15 @@
-package main
+package pkg
 
 type EventQueue struct {
 	events []Event
 }
 
-func (qeue *EventQueue) HasNext() bool {
-	return len(qeue.events) > 0
+func (queue *EventQueue) IsEmpty() bool {
+	return len(queue.events) == 0
+}
+
+func (queue *EventQueue) HasNext() bool {
+	return len(queue.events) > 0
 }
 
 //NextEvent returns the next event in the qeue, a nil value denotes a empty qeue

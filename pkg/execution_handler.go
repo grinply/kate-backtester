@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"fmt"
@@ -6,15 +6,15 @@ import (
 )
 
 type ExchangeHandler struct {
-	market            MarketType
-	balance           float64
-	makerFee          float64 //Fee applied to limit orders - percentage applied is defined as 0.01 = 1%
-	takerFee          float64 //Fee applied to market orders - percentage applied is defined as 0.01 = 1%
-	slipagePercentage float64 //Slipage percentage applied to each trade after execution
-	amountPerTrade    float64 //Percentage (0.01 = 1%) of the balance used to trade each individual single position.
-	openPosition      *Position
-	tradeHistory      []*Position
-	currentPrice      float64 //price used as reference for latest price data - used to check if inputs are valid
+	market         MarketType
+	balance        float64
+	makerFee       float64 //Fee applied to limit orders - percentage applied is defined as 0.01 = 1%
+	takerFee       float64 //Fee applied to market orders - percentage applied is defined as 0.01 = 1%
+	slippage       float64 //Slipage percentage applied to each trade after execution
+	amountPerTrade float64 //Percentage (0.01 = 1%) of the balance used to trade each individual single position.
+	openPosition   *Position
+	tradeHistory   []*Position
+	currentPrice   float64 //price used as reference for latest price data - used to check if inputs are valid
 }
 
 type MarketType int
@@ -28,12 +28,12 @@ const (
 //NewExchangeHandler creates a new exchange handler that emulates exchange functionality
 func NewExchangeHandler(market MarketType, makerFeePercent, takerFeePercent, percentagePerTrade float64) *ExchangeHandler {
 	return &ExchangeHandler{
-		market:            market,
-		balance:           1000,
-		slipagePercentage: 0.002,
-		makerFee:          makerFeePercent / 100,
-		takerFee:          takerFeePercent / 100,
-		amountPerTrade:    percentagePerTrade / 100,
+		market:         market,
+		balance:        1000,
+		slippage:       0.0002,
+		makerFee:       makerFeePercent / 100,
+		takerFee:       takerFeePercent / 100,
+		amountPerTrade: percentagePerTrade / 100,
 	}
 }
 
@@ -44,13 +44,14 @@ func (handler *ExchangeHandler) SetBalance(amount float64) {
 
 //SetSlipage defines the slipage in the price on all orders of type market
 func (handler *ExchangeHandler) SetSlipage(slipagePercent float64) {
-	handler.slipagePercentage = slipagePercent
+	handler.slippage = slipagePercent / 100
+	//TODO: implement logic to apply the slipagge when opening executing (open/close) market orders
 }
 
 //ExecuteMarketOrder opens a new position with a market order if there is no positions already opened
 func (handler *ExchangeHandler) OpenMarketOrder(tradeDirection Direction, leverage uint) error {
-	if handler.openPosition != nil && handler.openPosition.Direction == tradeDirection {
-		return fmt.Errorf("it is not possible to increase a already open position")
+	if handler.openPosition != nil {
+		return fmt.Errorf("there is a position already opened")
 	}
 
 	if handler.balance <= 1 {
@@ -66,6 +67,12 @@ func (handler *ExchangeHandler) OpenMarketOrder(tradeDirection Direction, levera
 		EntryPrice: handler.currentPrice,
 	}
 	handler.openPosition.TotalFeePaid = handler.marketFee()
+
+	if handler.market == USDFutures {
+		handler.openPosition.LiquidationPrice = USDMarginedLiquidationPrice(handler.openPosition)
+	} else if handler.market == CoinMarginedFutures {
+		handler.openPosition.LiquidationPrice = CoinMarginedLiquidationPrice(handler.openPosition)
+	}
 	return nil
 }
 
@@ -73,7 +80,6 @@ func (handler *ExchangeHandler) OpenLimitOrder(tradeDirection Direction, entryPr
 	if handler.openPosition != nil && handler.openPosition.Direction == tradeDirection {
 		return fmt.Errorf("it is not possible to increase a already open position")
 	}
-
 	return nil
 }
 
@@ -115,12 +121,12 @@ func (handler *ExchangeHandler) SetTakeProfit(price float64) error {
 
 //OnPriceChange emulates the price change for the asset.
 //Positions may be closed by: take profit, stoploss or liquidations.
-func (handler *ExchangeHandler) onPriceChange(newPrice float64) {
-	handler.currentPrice = newPrice
+func (handler *ExchangeHandler) onPriceChange(newPrice DataPoint) {
+	handler.currentPrice = newPrice.Close
 	if handler.openPosition == nil {
 		return
 	}
-	handler.updateUnrealizedPNL(newPrice)
+	handler.updateUnrealizedPNL(newPrice.Close)
 	if handler.checkCloseLongs(newPrice) || handler.checkCloseShorts(newPrice) ||
 		handler.checkLiquidation(newPrice) {
 		return //Position closed sucessfuly
@@ -136,35 +142,35 @@ func (handler *ExchangeHandler) updateUnrealizedPNL(latestPrice float64) {
 	}
 }
 
-func (handler *ExchangeHandler) checkCloseShorts(newPrice float64) bool {
+func (handler *ExchangeHandler) checkCloseShorts(newPrice DataPoint) bool {
 	if handler.openPosition.Direction != SHORT {
 		return false
 	}
 
-	if newPrice <= handler.openPosition.TakeProfit {
-		handler.closePosition(newPrice, handler.limitFee())
+	if handler.openPosition.TakeProfit > 0 && newPrice.Low <= handler.openPosition.TakeProfit {
+		handler.closePosition(handler.openPosition.TakeProfit, handler.limitFee())
 		return true
 	}
 
-	if newPrice >= handler.openPosition.Stoploss {
-		handler.closePosition(newPrice, handler.marketFee())
+	if handler.openPosition.Stoploss > 0 && newPrice.High >= handler.openPosition.Stoploss {
+		handler.closePosition(handler.openPosition.Stoploss, handler.marketFee())
 		return true
 	}
 	return false
 }
 
-func (handler *ExchangeHandler) checkCloseLongs(newPrice float64) bool {
+func (handler *ExchangeHandler) checkCloseLongs(newPrice DataPoint) bool {
 	if handler.openPosition.Direction != LONG {
 		return false
 	}
 
-	if newPrice >= handler.openPosition.TakeProfit {
-		handler.closePosition(newPrice, handler.limitFee())
+	if handler.openPosition.TakeProfit > 0 && newPrice.High >= handler.openPosition.TakeProfit {
+		handler.closePosition(handler.openPosition.TakeProfit, handler.limitFee())
 		return true
 	}
 
-	if newPrice <= handler.openPosition.Stoploss {
-		handler.closePosition(newPrice, handler.marketFee())
+	if handler.openPosition.Stoploss > 0 && newPrice.Low <= handler.openPosition.Stoploss {
+		handler.closePosition(handler.openPosition.Stoploss, handler.marketFee())
 		return true
 	}
 	return false
@@ -181,10 +187,12 @@ func (handler *ExchangeHandler) closePosition(latestPrice float64, closingFee fl
 }
 
 //checkLiquidation verifies if a open position should be liquidated
-func (handler *ExchangeHandler) checkLiquidation(newPrice float64) bool {
-	if handler.openPosition.UnrealizedPNL == -(handler.openPosition.Size * 0.9) {
-		handler.closePosition(newPrice, handler.liquidationFee())
+func (handler *ExchangeHandler) checkLiquidation(newPrice DataPoint) bool {
+	if handler.openPosition.Direction == LONG && handler.openPosition.LiquidationPrice >= newPrice.Low {
+		handler.closePosition(handler.openPosition.LiquidationPrice, handler.liquidationFee())
 		return true
+	} else if handler.openPosition.Direction == SHORT && handler.openPosition.LiquidationPrice <= newPrice.Low {
+		handler.closePosition(handler.openPosition.LiquidationPrice, handler.liquidationFee())
 	}
 	return false
 }
