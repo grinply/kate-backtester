@@ -47,7 +47,7 @@ func (bt *Backtester) Run() *Statistics {
 	var datapoints = bt.dataHandler.nextValues()
 
 	for processed := bt.processNextEvent(); processed || datapoints != nil; processed = bt.processNextEvent() {
-		if bt.eventQueue.IsEmpty() {
+		if !bt.eventQueue.HasNext() {
 			if datapoints = bt.dataHandler.nextValues(); datapoints != nil {
 				bt.eventQueue.AddEvent(datapoints)
 			}

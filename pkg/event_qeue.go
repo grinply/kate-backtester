@@ -1,13 +1,11 @@
 package pkg
 
+//EventQueue is a queue of events that can be processed when executing a backtest
 type EventQueue struct {
 	events []Event
 }
 
-func (queue *EventQueue) IsEmpty() bool {
-	return len(queue.events) == 0
-}
-
+//HasNext checks if there at least one event in the queue
 func (queue *EventQueue) HasNext() bool {
 	return len(queue.events) > 0
 }

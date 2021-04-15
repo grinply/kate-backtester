@@ -7,6 +7,7 @@ const (
 	SHORT                  //Opens a new short position or close a long if there is a position already opened
 )
 
+//Strategy defines how/when trades should be opened and how stoploss/takeprofits should be set in a simulated run
 type Strategy interface {
 	//ProcessNextPriceData check if it should open or close position
 	//the latestPrices represent the most recent price data as defined in the window of the backtest

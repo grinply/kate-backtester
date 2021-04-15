@@ -11,16 +11,19 @@ import (
 	"strings"
 )
 
+//DataHandler is a wrapper that packages the required data for running backtesting simulation.
 type DataHandler struct {
 	counter, windowSize int
 	prices              []DataPoint
 }
 
+//DataPoint is a unit that encapsulates OHLCV price data
 type DataPoint struct {
 	Event
 	Open, High, Low, Close, Volume float64
 }
 
+//Position is the representation of a traded position
 type Position struct {
 	Direction              Direction
 	Size                   float64 //total size of the position including leverage
@@ -34,6 +37,7 @@ type Position struct {
 	LiquidationPrice       float64
 }
 
+//AggregatedDataPoints is a group datapoints
 type AggregatedDataPoints struct {
 	Event
 	datapoints []DataPoint

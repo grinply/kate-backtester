@@ -16,7 +16,10 @@ type ExchangeHandler struct {
 	currentPrice   float64 //price used as reference for latest price data - used to check if inputs are valid
 }
 
+//MarketType is a type of market that can be traded ( USDFutures, CoinMarginedFutures, Spot, ...)
 type MarketType int
+
+//PositionTransition are the possible ways a position can change its state
 type PositionTransition int
 
 const (
@@ -55,7 +58,7 @@ func (handler *ExchangeHandler) SetSlipage(slipagePercent float64) {
 	//TODO: implement logic to apply the slipagge when opening executing (open/close) market orders
 }
 
-//ExecuteMarketOrder opens a new position with a market order if there is no positions already opened
+//OpenMarketOrder opens a new position with a market order if there is no positions already opened
 func (handler *ExchangeHandler) OpenMarketOrder(tradeDirection Direction, leverage uint) error {
 	if handler.openPosition != nil {
 		return fmt.Errorf("there is a position already opened")
@@ -68,13 +71,6 @@ func (handler *ExchangeHandler) OpenMarketOrder(tradeDirection Direction, levera
 	handler.openPosition = handler.marketHandler.createPosition(tradeDirection, handler.currentPrice,
 		handler.balance, handler.amountPerTrade, leverage)
 	handler.openPosition.TotalFeePaid = handler.fee(TakerTransition)
-	return nil
-}
-
-func (handler *ExchangeHandler) OpenLimitOrder(tradeDirection Direction, entryPrice, margin float64, leverage uint) error {
-	if handler.openPosition != nil && handler.openPosition.Direction == tradeDirection {
-		return fmt.Errorf("it is not possible to increase a already open position")
-	}
 	return nil
 }
 
@@ -97,6 +93,7 @@ func (handler *ExchangeHandler) SetStoploss(price float64) error {
 	return nil
 }
 
+//SetTakeProfit defines a new takeprofit for the current open position
 func (handler *ExchangeHandler) SetTakeProfit(price float64) error {
 	if handler.openPosition == nil {
 		return fmt.Errorf("there is no positions open to set a takeprofit")

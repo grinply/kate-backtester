@@ -9,7 +9,7 @@ const (
 	LIMIT
 )
 
-//Order is a request of execution based on certain conditions to the exchange
+//OpenPositionEvt is a event to open a simulated position
 type OpenPositionEvt struct {
 	Event
 	Direction Direction
@@ -17,11 +17,13 @@ type OpenPositionEvt struct {
 	OrderType OrderType
 }
 
+//StoplossEvt is a event to set a stoploss
 type StoplossEvt struct {
 	Event
 	Price float64
 }
 
+//TakeProfitEvt is a event to set a takeprofit
 type TakeProfitEvt struct {
 	Event
 	Price float64
