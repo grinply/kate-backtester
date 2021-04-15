@@ -60,12 +60,12 @@ func TestLoadInvalidCSV(t *testing.T) {
 
 	//Checking if a error is raised with a csv containing a unknown column
 	for _, columnLine := range columnsCSV {
-		unkownColumnCSV := createTempCSV()
-		defer os.Remove(unkownColumnCSV.Name())
-		unkownColumnCSV.WriteString(columnLine)
+		unknownColumnCSV := createTempCSV()
+		defer os.Remove(unknownColumnCSV.Name())
+		unknownColumnCSV.WriteString(columnLine)
 
-		if _, err := PricesFromCSV(unkownColumnCSV.Name()); err == nil {
-			t.Errorf("A error was expected when loading a csv containing a unkown column")
+		if _, err := PricesFromCSV(unknownColumnCSV.Name()); err == nil {
+			t.Errorf("A error was expected when loading a csv containing a unknown column")
 		}
 	}
 

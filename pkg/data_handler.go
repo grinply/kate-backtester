@@ -64,7 +64,7 @@ func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 	return nil
 }
 
-//LoadPricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error ocurred
+//LoadPricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error occurred
 func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 	csvFile, _ := os.Open(csvFilePath)
 	reader := csv.NewReader(bufio.NewReader(csvFile))
