@@ -2,6 +2,7 @@ package pkg
 
 import "math"
 
+//CoinMarket is the handler that allows trading simulation of COIN Margined crypto assets
 type CoinMarket struct {
 	Market   MarketType
 	MakerFee float64

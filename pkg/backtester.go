@@ -1,5 +1,6 @@
 package pkg
 
+//Backtester allows backtesting trading strategies on crypto markets
 type Backtester struct {
 	eventQueue      EventQueue
 	myStrategy      Strategy
@@ -7,6 +8,7 @@ type Backtester struct {
 	dataHandler     *DataHandler
 }
 
+//BacktestOptions is general settings for running a backtest
 type BacktestOptions struct {
 	TradedPair         string //Must follow the format: BTC/USD, ETH/USDT ...
 	PriceWindow        uint
@@ -19,6 +21,7 @@ type BacktestOptions struct {
 //Event represents a action that will be processed by the eventloop
 type Event interface{}
 
+//NewBacktester creates a new backtester instance that allows running trading simulations on crypto markets
 func NewBacktester(mystrategy Strategy, dataHandler *DataHandler) *Backtester {
 	return &Backtester{
 		exchangeHandler: NewExchangeHandler(USDFutures, 0.02, 0.04, 1),
@@ -27,6 +30,7 @@ func NewBacktester(mystrategy Strategy, dataHandler *DataHandler) *Backtester {
 	}
 }
 
+//NewCustomizedBacktester creates a new customized backtester instance that allows running trading simulations on crypto markets
 func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, options BacktestOptions) *Backtester {
 	exchangeHandler := NewExchangeHandler(options.Market, options.MakerFeePercentage, options.TakerFeePercentage,
 		options.percentagePerTrade)
@@ -37,6 +41,7 @@ func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, opti
 	}
 }
 
+//Run executes a trading simulation for the provided configuration on the Backtester
 func (bt *Backtester) Run() *Statistics {
 	initialBalance := bt.exchangeHandler.balance
 	var datapoints = bt.dataHandler.nextValues()
@@ -93,6 +98,7 @@ func (bt *Backtester) processNewPriceEvt(newPrice *AggregatedDataPoints) {
 	}
 }
 
+//SetSlippagePercentage define a slippage that tries to better emulate the real trading market
 func (bt *Backtester) SetSlippagePercentage(slippagePercent float64) {
 	bt.exchangeHandler.SetSlipage(slippagePercent)
 }

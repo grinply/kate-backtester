@@ -2,6 +2,7 @@ package pkg
 
 import "fmt"
 
+//Statistics are the results based on trades executed on a backtest run
 type Statistics struct {
 	ROIPercentage float64
 	NetProfit     float64

@@ -1,10 +1,10 @@
 package pkg
 
 import (
-	"fmt"
 	"math"
 )
 
+//USDMarket is the handler that allows trading simulation of USD Margined crypto assets
 type USDMarket struct {
 	Market   MarketType
 	MakerFee float64
@@ -22,7 +22,6 @@ func (marketHandler *USDMarket) createPosition(tradeDirection Direction, current
 	}
 	newPosition.Size = math.Max(1.0, float64(leverage)) * newPosition.Margin
 	newPosition.LiquidationPrice = marketHandler.liquidationPrice(newPosition)
-	fmt.Println("Liquidation price: ", newPosition.LiquidationPrice)
 	return newPosition
 }
 
