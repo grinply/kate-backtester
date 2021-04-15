@@ -22,16 +22,16 @@ type DataPoint struct {
 }
 
 type Position struct {
-	Direction            Direction
-	Size                 float64 //total size of the position including leverage
-	Leverage             uint
-	Margin, EntryPrice   float64
-	ClosePrice           float64
-	Stoploss, TakeProfit float64
-	UnrealizedPNL        float64
-	RealizedPNL          float64
-	TotalFeePaid         float64
-	LiquidationPrice     float64
+	Direction              Direction
+	Size                   float64 //total size of the position including leverage
+	Leverage               uint    //the multiplier for increasing the total traded position
+	Margin                 float64 //the amount of colateral in COIN that is backing the position
+	EntryPrice, ClosePrice float64
+	Stoploss, TakeProfit   float64
+	UnrealizedPNL          float64
+	RealizedPNL            float64
+	TotalFeePaid           float64
+	LiquidationPrice       float64
 }
 
 type AggregatedDataPoints struct {

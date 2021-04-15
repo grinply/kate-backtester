@@ -8,6 +8,7 @@ type Backtester struct {
 }
 
 type BacktestOptions struct {
+	TradedPair         string //Must follow the format: BTC/USD, ETH/USDT ...
 	PriceWindow        uint
 	Market             MarketType
 	MakerFeePercentage float64

@@ -2,11 +2,10 @@ package pkg
 
 import (
 	"fmt"
-	"math"
 )
 
 type ExchangeHandler struct {
-	market         MarketType
+	marketHandler  MarketHandler
 	balance        float64
 	makerFee       float64 //Fee applied to limit orders - percentage applied is defined as 0.01 = 1%
 	takerFee       float64 //Fee applied to market orders - percentage applied is defined as 0.01 = 1%
@@ -18,6 +17,7 @@ type ExchangeHandler struct {
 }
 
 type MarketType int
+type PositionTransition int
 
 const (
 	CoinMarginedFutures MarketType = iota
@@ -25,16 +25,23 @@ const (
 	Spot
 )
 
+const (
+	MakerTransition PositionTransition = iota
+	TakerTransition
+	Liquidation
+)
+
 //NewExchangeHandler creates a new exchange handler that emulates exchange functionality
 func NewExchangeHandler(market MarketType, makerFeePercent, takerFeePercent, percentagePerTrade float64) *ExchangeHandler {
-	return &ExchangeHandler{
-		market:         market,
+	handler := &ExchangeHandler{
 		balance:        1000,
 		slippage:       0.0002,
 		makerFee:       makerFeePercent / 100,
 		takerFee:       takerFeePercent / 100,
 		amountPerTrade: percentagePerTrade / 100,
 	}
+	handler.marketHandler = newMarketHandler(market, handler.makerFee, handler.takerFee)
+	return handler
 }
 
 //SetBalance sets the balance that will be used to trade
@@ -58,21 +65,9 @@ func (handler *ExchangeHandler) OpenMarketOrder(tradeDirection Direction, levera
 		return fmt.Errorf("no more balance to trade")
 	}
 
-	margin := handler.balance * handler.amountPerTrade
-	handler.openPosition = &Position{
-		Direction:  tradeDirection,
-		Margin:     margin,
-		Leverage:   leverage,
-		Size:       math.Max(1.0, float64(leverage)) * margin,
-		EntryPrice: handler.currentPrice,
-	}
-	handler.openPosition.TotalFeePaid = handler.marketFee()
-
-	if handler.market == USDFutures {
-		handler.openPosition.LiquidationPrice = USDMarginedLiquidationPrice(handler.openPosition)
-	} else if handler.market == CoinMarginedFutures {
-		handler.openPosition.LiquidationPrice = CoinMarginedLiquidationPrice(handler.openPosition)
-	}
+	handler.openPosition = handler.marketHandler.createPosition(tradeDirection, handler.currentPrice,
+		handler.balance, handler.amountPerTrade, leverage)
+	handler.openPosition.TotalFeePaid = handler.fee(TakerTransition)
 	return nil
 }
 
@@ -126,20 +121,16 @@ func (handler *ExchangeHandler) onPriceChange(newPrice DataPoint) {
 	if handler.openPosition == nil {
 		return
 	}
-	handler.updateUnrealizedPNL(newPrice.Close)
+
 	if handler.checkCloseLongs(newPrice) || handler.checkCloseShorts(newPrice) ||
 		handler.checkLiquidation(newPrice) {
 		return //Position closed sucessfuly
 	}
+	//handler.updateUnrealizedPNL(newPrice.Close)
 }
 
 func (handler *ExchangeHandler) updateUnrealizedPNL(latestPrice float64) {
-	switch handler.market {
-	case CoinMarginedFutures:
-		handler.openPosition.UnrealizedPNL = CoinMarginedUnrealizedPNL(handler.openPosition, latestPrice)
-	case USDFutures:
-		handler.openPosition.UnrealizedPNL = USDMarginedUnrealizedPNL(handler.openPosition, latestPrice)
-	}
+	handler.openPosition.UnrealizedPNL = handler.marketHandler.unrealizedPNL(handler.openPosition, latestPrice)
 }
 
 func (handler *ExchangeHandler) checkCloseShorts(newPrice DataPoint) bool {
@@ -148,12 +139,12 @@ func (handler *ExchangeHandler) checkCloseShorts(newPrice DataPoint) bool {
 	}
 
 	if handler.openPosition.TakeProfit > 0 && newPrice.Low <= handler.openPosition.TakeProfit {
-		handler.closePosition(handler.openPosition.TakeProfit, handler.limitFee())
+		handler.closePosition(handler.openPosition.TakeProfit, MakerTransition)
 		return true
 	}
 
 	if handler.openPosition.Stoploss > 0 && newPrice.High >= handler.openPosition.Stoploss {
-		handler.closePosition(handler.openPosition.Stoploss, handler.marketFee())
+		handler.closePosition(handler.openPosition.Stoploss, TakerTransition)
 		return true
 	}
 	return false
@@ -165,22 +156,25 @@ func (handler *ExchangeHandler) checkCloseLongs(newPrice DataPoint) bool {
 	}
 
 	if handler.openPosition.TakeProfit > 0 && newPrice.High >= handler.openPosition.TakeProfit {
-		handler.closePosition(handler.openPosition.TakeProfit, handler.limitFee())
+		handler.closePosition(handler.openPosition.TakeProfit, MakerTransition)
 		return true
 	}
 
 	if handler.openPosition.Stoploss > 0 && newPrice.Low <= handler.openPosition.Stoploss {
-		handler.closePosition(handler.openPosition.Stoploss, handler.marketFee())
+		handler.closePosition(handler.openPosition.Stoploss, TakerTransition)
 		return true
 	}
 	return false
 }
 
-func (handler *ExchangeHandler) closePosition(latestPrice float64, closingFee float64) {
-	handler.openPosition.ClosePrice = latestPrice
-	handler.openPosition.TotalFeePaid += closingFee
+func (handler *ExchangeHandler) closePosition(closePrice float64, transition PositionTransition) {
+	handler.updateUnrealizedPNL(closePrice)
+	handler.openPosition.ClosePrice = closePrice
+	handler.openPosition.TotalFeePaid += handler.fee(transition)
+
 	handler.openPosition.RealizedPNL = handler.openPosition.UnrealizedPNL - handler.openPosition.TotalFeePaid
 	handler.openPosition.UnrealizedPNL = 0
+	handler.balance += handler.openPosition.RealizedPNL
 
 	handler.tradeHistory = append(handler.tradeHistory, handler.openPosition)
 	handler.openPosition = nil
@@ -188,25 +182,28 @@ func (handler *ExchangeHandler) closePosition(latestPrice float64, closingFee fl
 
 //checkLiquidation verifies if a open position should be liquidated
 func (handler *ExchangeHandler) checkLiquidation(newPrice DataPoint) bool {
+	fmt.Printf("%f <= %f\n", handler.openPosition.LiquidationPrice, newPrice.High)
+
 	if handler.openPosition.Direction == LONG && handler.openPosition.LiquidationPrice >= newPrice.Low {
-		handler.closePosition(handler.openPosition.LiquidationPrice, handler.liquidationFee())
+		handler.closePosition(handler.openPosition.LiquidationPrice, Liquidation)
 		return true
-	} else if handler.openPosition.Direction == SHORT && handler.openPosition.LiquidationPrice <= newPrice.Low {
-		handler.closePosition(handler.openPosition.LiquidationPrice, handler.liquidationFee())
+	}
+
+	if handler.openPosition.Direction == SHORT && handler.openPosition.LiquidationPrice <= newPrice.High {
+		fmt.Println("Liquidated short")
+		handler.closePosition(handler.openPosition.LiquidationPrice, Liquidation)
 	}
 	return false
 }
 
-//marketFee calculates the fee applyed on market orders
-func (handler *ExchangeHandler) marketFee() float64 {
-	return handler.openPosition.Size * handler.takerFee
-}
-
-//limitFee calculates the fee applyed on limit orders
-func (handler *ExchangeHandler) limitFee() float64 {
-	return handler.openPosition.Size * handler.makerFee
-}
-
-func (handler *ExchangeHandler) liquidationFee() float64 {
-	return 2 * handler.marketFee()
+func (handler *ExchangeHandler) fee(transition PositionTransition) float64 {
+	switch transition {
+	case MakerTransition:
+		return handler.marketHandler.limitFee(handler.openPosition)
+	case TakerTransition:
+		return handler.marketHandler.marketFee(handler.openPosition)
+	case Liquidation:
+		return handler.marketHandler.liquidationFee(handler.openPosition)
+	}
+	return 0.0
 }

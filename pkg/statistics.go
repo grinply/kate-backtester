@@ -1,5 +1,7 @@
 package pkg
 
+import "fmt"
+
 type Statistics struct {
 	ROIPercentage float64
 	NetProfit     float64
@@ -17,6 +19,9 @@ func calculateStatistics(initialBalance float64, tradeHistory []*Position) *Stat
 		if position.RealizedPNL >= 0 {
 			wins++
 		}
+		fmt.Printf("open: %f | close: %f | liquidation: %f | margin: %f | size: %f | PNL %f\n", position.EntryPrice,
+			position.ClosePrice, position.LiquidationPrice, position.Margin*position.EntryPrice, position.Size, position.RealizedPNL)
+
 		totalProfit += position.RealizedPNL
 
 		if peakProfit < totalProfit {
