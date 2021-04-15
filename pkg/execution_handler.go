@@ -124,9 +124,9 @@ func (handler *ExchangeHandler) onPriceChange(newPrice DataPoint) {
 
 	if handler.checkCloseLongs(newPrice) || handler.checkCloseShorts(newPrice) ||
 		handler.checkLiquidation(newPrice) {
-		return //Position closed sucessfuly
+		return //Position closed successfully
 	}
-	//handler.updateUnrealizedPNL(newPrice.Close)
+	handler.updateUnrealizedPNL(newPrice.Close)
 }
 
 func (handler *ExchangeHandler) updateUnrealizedPNL(latestPrice float64) {

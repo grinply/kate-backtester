@@ -13,12 +13,12 @@ type Strategy interface {
 	ProcessNextPriceData(latestPrices []DataPoint) *OpenPositionEvt
 
 	//SetStoploss [Optional] defines a price where a stoploss will be triggered closing the position in loss
-	//The SetStoploss is called with updated unrealizedPnl everytime new price data is avaliable
+	//The SetStoploss is called with updated unrealizedPnl everytime new price data is available
 	//A return value of -1 denotes that no stoploss will be set
 	SetStoploss(openPosition Position) *StoplossEvt
 
 	//SetTakeProfit defines a price where a takeprofit will be triggered closing the position in profit
-	//The SetStoploss is called with updated unrealizedPnl everytime new price data is avaliable
+	//The SetStoploss is called with updated unrealizedPnl everytime new price data is available
 	//A return value of -1 denotes that no takeprofit will be set
 	SetTakeProfit(openPosition Position) *TakeProfitEvt
 }

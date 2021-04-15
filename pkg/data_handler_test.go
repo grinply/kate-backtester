@@ -58,7 +58,7 @@ func TestLoadInvalidCSV(t *testing.T) {
 		"ERRORHigh,Low,Close,Volume", "Open,ERRORHigh,Low,Close,Volume", "Open,High,ERRORLow,Close,Volume",
 		"Open,High,Low,ERRORClose,Volume", "Open,High,Low,Close,ERRORVolume"}
 
-	//Checking if a error is raised with a csv containing a unkown column
+	//Checking if a error is raised with a csv containing a unknown column
 	for _, columnLine := range columnsCSV {
 		unkownColumnCSV := createTempCSV()
 		defer os.Remove(unkownColumnCSV.Name())

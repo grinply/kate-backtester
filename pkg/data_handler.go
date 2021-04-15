@@ -25,7 +25,7 @@ type Position struct {
 	Direction              Direction
 	Size                   float64 //total size of the position including leverage
 	Leverage               uint    //the multiplier for increasing the total traded position
-	Margin                 float64 //the amount of colateral in COIN that is backing the position
+	Margin                 float64 //the amount of collateral in COIN that is backing the position
 	EntryPrice, ClosePrice float64
 	Stoploss, TakeProfit   float64
 	UnrealizedPNL          float64
