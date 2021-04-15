@@ -1,11 +1,13 @@
 package pkg
 
-//Order types denotes how/when a execution of a position is made on the exchange.
+//OrderType denotes how/when a execution of a position is made on the exchange.
 //To know more check: https://www.binance.com/en/support/articles/360033779452
 type OrderType int
 
 const (
+	//MARKET is a type of order that executes immediately at the best price
 	MARKET OrderType = iota
+	//LIMIT is a type of order that executes when the traget price is reached
 	LIMIT
 )
 

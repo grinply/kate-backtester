@@ -41,6 +41,10 @@ func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, opti
 	}
 }
 
+func (bt *Backtester) SetFixedTradeAmount(amount float64) {
+
+}
+
 //Run executes a trading simulation for the provided configuration on the Backtester
 func (bt *Backtester) Run() *Statistics {
 	initialBalance := bt.exchangeHandler.balance
@@ -53,7 +57,7 @@ func (bt *Backtester) Run() *Statistics {
 			}
 		}
 	}
-	return calculateStatistics(initialBalance, bt.exchangeHandler.tradeHistory)
+	return bt.calculateStatistics(initialBalance)
 }
 
 //processNextEvent process the next event in the queue if the queue is not empty.

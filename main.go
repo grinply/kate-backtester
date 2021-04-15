@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	bt "quickbacktest/pkg"
+	"time"
 )
 
 type simpleStrategy struct{}
@@ -14,7 +15,11 @@ func main() {
 	}
 
 	backtester := bt.NewBacktester(newSimpleStrategy(), data)
-	fmt.Printf("%+v", backtester.Run())
+	backtester.SetFixedTradeAmount(5)
+	start := time.Now()
+	result := backtester.Run()
+	fmt.Printf("\nIt took %v to run the backtest\n", time.Since(start))
+	fmt.Printf("%+v", result)
 }
 
 func newSimpleStrategy() *simpleStrategy {
@@ -33,16 +38,16 @@ func (strategy *simpleStrategy) ProcessNextPriceData(latestPrices []bt.DataPoint
 
 //SetStoploss defines a stoploss for the current open position
 func (strategy *simpleStrategy) SetStoploss(openPosition bt.Position) *bt.StoplossEvt {
-	if openPosition.Stoploss <= 0 {
-		return &bt.StoplossEvt{Price: openPosition.EntryPrice * 0.95}
+	if openPosition.Direction == bt.LONG && openPosition.Stoploss <= 0 {
+		return &bt.StoplossEvt{Price: openPosition.EntryPrice * 0.97}
 	}
 	return nil
 }
 
 //SetTakeProfit defines a takeprofit for the current open position
 func (strategy *simpleStrategy) SetTakeProfit(openPosition bt.Position) *bt.TakeProfitEvt {
-	if openPosition.TakeProfit <= 0 {
-		return &bt.TakeProfitEvt{Price: openPosition.EntryPrice * 1.1}
+	if openPosition.Direction == bt.LONG && openPosition.TakeProfit <= 0 {
+		return &bt.TakeProfitEvt{Price: openPosition.EntryPrice * 1.18}
 	}
 	return nil
 }

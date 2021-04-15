@@ -6,15 +6,16 @@ import (
 
 //ExchangeHandler emulates to behavior of a crypto exchange accepting and tracking orders/trades.
 type ExchangeHandler struct {
-	marketHandler  MarketHandler
-	balance        float64
-	makerFee       float64 //Fee applied to limit orders - percentage applied is defined as 0.01 = 1%
-	takerFee       float64 //Fee applied to market orders - percentage applied is defined as 0.01 = 1%
-	slippage       float64 //Slipage percentage applied to each trade after execution
-	amountPerTrade float64 //Percentage (0.01 = 1%) of the balance used to trade each individual single position.
-	openPosition   *Position
-	tradeHistory   []*Position
-	currentPrice   float64 //price used as reference for latest price data - used to check if inputs are valid
+	marketHandler    MarketHandler
+	balance          float64
+	makerFee         float64 //Fee applied to limit orders - percentage applied is defined as 0.01 = 1%
+	takerFee         float64 //Fee applied to market orders - percentage applied is defined as 0.01 = 1%
+	slippage         float64 //Slipage percentage applied to each trade after execution
+	amountPerTrade   float64 //Percentage (0.01 = 1%) of the balance used to trade each individual single position.
+	openPosition     *Position
+	tradeHistory     []*Position
+	currentPrice     float64 //price used as reference for latest price data - used to check if inputs are valid
+	fixedTradeAmount float64 //amount if define that will be used in all trades
 }
 
 //MarketType is a type of market that can be traded ( USDFutures, CoinMarginedFutures, Spot, ...)
@@ -75,8 +76,13 @@ func (handler *ExchangeHandler) OpenMarketOrder(tradeDirection Direction, levera
 		return fmt.Errorf("no more balance to trade")
 	}
 
+	amountToTrade := handler.balance * handler.amountPerTrade
+	if handler.fixedTradeAmount > 0 {
+		amountToTrade = handler.fixedTradeAmount
+	}
+
 	handler.openPosition = handler.marketHandler.createPosition(tradeDirection, handler.currentPrice,
-		handler.balance, handler.amountPerTrade, leverage)
+		handler.balance, amountToTrade, leverage)
 	handler.openPosition.TotalFeePaid = handler.fee(TakerTransition)
 	return nil
 }
@@ -175,27 +181,25 @@ func (handler *ExchangeHandler) closePosition(closePrice float64, transition Pos
 	handler.updateUnrealizedPNL(closePrice)
 	handler.openPosition.ClosePrice = closePrice
 	handler.openPosition.TotalFeePaid += handler.fee(transition)
-
 	handler.openPosition.RealizedPNL = handler.openPosition.UnrealizedPNL - handler.openPosition.TotalFeePaid
 	handler.openPosition.UnrealizedPNL = 0
 	handler.balance += handler.openPosition.RealizedPNL
 
 	handler.tradeHistory = append(handler.tradeHistory, handler.openPosition)
+
 	handler.openPosition = nil
 }
 
 //checkLiquidation verifies if a open position should be liquidated
 func (handler *ExchangeHandler) checkLiquidation(newPrice DataPoint) bool {
-	fmt.Printf("%f <= %f\n", handler.openPosition.LiquidationPrice, newPrice.High)
-
 	if handler.openPosition.Direction == LONG && handler.openPosition.LiquidationPrice >= newPrice.Low {
 		handler.closePosition(handler.openPosition.LiquidationPrice, Liquidation)
 		return true
 	}
 
 	if handler.openPosition.Direction == SHORT && handler.openPosition.LiquidationPrice <= newPrice.High {
-		fmt.Println("Liquidated short")
 		handler.closePosition(handler.openPosition.LiquidationPrice, Liquidation)
+		return true
 	}
 	return false
 }

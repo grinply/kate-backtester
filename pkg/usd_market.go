@@ -11,8 +11,8 @@ type USDMarket struct {
 	TakerFee float64
 }
 
-func (marketHandler *USDMarket) createPosition(tradeDirection Direction, currentPrice, balance, amountPerTrade float64, leverage uint) *Position {
-	usdMargin := balance * amountPerTrade
+func (marketHandler *USDMarket) createPosition(tradeDirection Direction, currentPrice, balance, amountToTrade float64, leverage uint) *Position {
+	usdMargin := amountToTrade
 
 	newPosition := &Position{
 		Direction:  tradeDirection,
