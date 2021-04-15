@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+//ExchangeHandler emulates to behavior of a crypto exchange accepting and tracking orders/trades.
 type ExchangeHandler struct {
 	marketHandler  MarketHandler
 	balance        float64
@@ -23,14 +24,20 @@ type MarketType int
 type PositionTransition int
 
 const (
+	//CoinMarginedFutures is a type of market that uses and earns coins as the main currency
 	CoinMarginedFutures MarketType = iota
+	//USDFutures is a type of market that uses and earns USD/USDT as the main currency
 	USDFutures
+	//Spot is a type of market that represents the direct exchange of crypto assets
 	Spot
 )
 
 const (
+	//MakerTransition is the transition when a limit/takeprofit orders is executed on a position
 	MakerTransition PositionTransition = iota
+	//TakerTransition is the transition when a market/stoploss order is executed on a position
 	TakerTransition
+	//Liquidation is the transition when a liquidation is triggered on a open position
 	Liquidation
 )
 

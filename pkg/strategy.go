@@ -1,10 +1,13 @@
 package pkg
 
+//Direction denotes the trade direction that a Position can have
 type Direction int
 
 const (
-	LONG  Direction = iota //Open a new long position or close a short  if there is a position already opened
-	SHORT                  //Opens a new short position or close a long if there is a position already opened
+	//LONG denotes the trade direction that earns when the price moves upwards
+	LONG Direction = iota
+	//SHORT denotes the trade direction that earns when the price moves downwards
+	SHORT
 )
 
 //Strategy defines how/when trades should be opened and how stoploss/takeprofits should be set in a simulated run

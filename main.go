@@ -5,7 +5,7 @@ import (
 	bt "quickbacktest/pkg"
 )
 
-type SimpleStrategy struct{}
+type simpleStrategy struct{}
 
 func main() {
 	data, err := bt.PricesFromCSV("testdata/complete.csv")
@@ -17,11 +17,12 @@ func main() {
 	fmt.Printf("%+v", backtester.Run())
 }
 
-func newSimpleStrategy() *SimpleStrategy {
-	return &SimpleStrategy{}
+func newSimpleStrategy() *simpleStrategy {
+	return &simpleStrategy{}
 }
 
-func (strategy *SimpleStrategy) ProcessNextPriceData(latestPrices []bt.DataPoint) *bt.OpenPositionEvt {
+//ProcessNextPriceData process the next data point and checks if a position should be opened
+func (strategy *simpleStrategy) ProcessNextPriceData(latestPrices []bt.DataPoint) *bt.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 	if latestPrices[latest].Close > latestPrices[latest-1].Close &&
 		latestPrices[latest-1].Close > latestPrices[latest-2].Close {
@@ -30,14 +31,16 @@ func (strategy *SimpleStrategy) ProcessNextPriceData(latestPrices []bt.DataPoint
 	return nil
 }
 
-func (strategy *SimpleStrategy) SetStoploss(openPosition bt.Position) *bt.StoplossEvt {
+//SetStoploss defines a stoploss for the current open position
+func (strategy *simpleStrategy) SetStoploss(openPosition bt.Position) *bt.StoplossEvt {
 	if openPosition.Stoploss <= 0 {
 		return &bt.StoplossEvt{Price: openPosition.EntryPrice * 0.95}
 	}
 	return nil
 }
 
-func (strategy *SimpleStrategy) SetTakeProfit(openPosition bt.Position) *bt.TakeProfitEvt {
+//SetTakeProfit defines a takeprofit for the current open position
+func (strategy *simpleStrategy) SetTakeProfit(openPosition bt.Position) *bt.TakeProfitEvt {
 	if openPosition.TakeProfit <= 0 {
 		return &bt.TakeProfitEvt{Price: openPosition.EntryPrice * 1.1}
 	}

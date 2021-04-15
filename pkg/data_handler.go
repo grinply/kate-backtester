@@ -68,7 +68,7 @@ func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 	return nil
 }
 
-//LoadPricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error occurred
+//PricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error occurred
 func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 	csvFile, _ := os.Open(csvFilePath)
 	reader := csv.NewReader(bufio.NewReader(csvFile))
@@ -91,11 +91,12 @@ func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 		//Checking each OHLCV value in the csv
 		var numbers [5]float64
 		for i := 0; i < 5; i++ {
-			if value, err := strToFloat(line[i]); err != nil {
+			value, err := strToFloat(line[i])
+			if err != nil {
 				return nil, err
-			} else {
-				numbers[i] = value
 			}
+			numbers[i] = value
+
 		}
 
 		prices = append(prices, DataPoint{
@@ -112,12 +113,12 @@ func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 
 //strToFloat converts a string value to float64, in case of error Panic
 func strToFloat(str string) (float64, error) {
-	if number, err := strconv.ParseFloat(str, 64); err == nil {
+	number, err := strconv.ParseFloat(str, 64)
+	if err == nil {
 		return number, nil
-	} else {
-		return -1, fmt.Errorf(`invalid parameter '%v' was found in the provided csv. 
-		Make sure the csv contain only valid float numbers`, str)
 	}
+	return -1, fmt.Errorf(`invalid parameter '%v' was found in the provided csv. 
+		Make sure the csv contain only valid float numbers`, str)
 }
 
 //Check if the first line with columns of the csv are in the valid format
