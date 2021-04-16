@@ -1,4 +1,4 @@
-module quickbacktest
+module katebacktest
 
 go 1.16
 
