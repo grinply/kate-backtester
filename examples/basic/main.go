@@ -10,17 +10,17 @@ type simpleStrategy struct{}
 
 func main() {
 	data, err := kate.PricesFromCSV("../../testdata/ETHUSD5.csv")
-	kate.NewBacktester(&simpleStrategy{}, data)
 
 	if err != nil {
 		panic("could`t load data." + err.Error())
 	}
 
+	kate.NewBacktester(&simpleStrategy{}, data)
 	backtester := kate.NewBacktester(&simpleStrategy{}, data)
 	fmt.Println(backtester.Run())
 }
 
-//ProcessNextPriceData process the next data point and checks if a position should be opened
+//OpenNewPosition process the next data point and checks if a position should be opened
 func (stg *simpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
