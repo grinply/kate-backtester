@@ -41,10 +41,12 @@ func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, opti
 	}
 }
 
+//SetBalance defines the initial balance that will be used when trading
 func (bt *Backtester) SetBalance(amount float64) {
 	bt.exchangeHandler.balance = amount
 }
 
+//SetFixedTradeAmount defines a fixed value that will be used to open every position when trading
 func (bt *Backtester) SetFixedTradeAmount(amount float64) {
 	bt.exchangeHandler.fixedTradeAmount = amount
 }
