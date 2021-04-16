@@ -7,16 +7,16 @@
 A fast and simple backtest implementation for **algorithmic trading** focused on [cryptocurrencies](https://en.wikipedia.org/wiki/Cryptocurrency#:~:text=A%20cryptocurrency%2C%20crypto%20currency%20or,creation%20of%20additional%20coins%2C%20and) written in golang.
 
 ## Data
-The price data used to run the backtests can be from any time interval, but it must contain a [**OHLCV**](https://en.wikipedia.org/wiki/Open-high-low-close_chart) structure _(**O**pen **H**igh **L**ow **C**lose **V**olume)_. It is possible to load data from **csv** files and the [**postgresql** database](https://www.postgresql.org/).
-
-## Usage
-To start using **kate backtester** you will need to implement the [**Strategy interface**](https://github.com/victorl2/kate-backtester/blob/main/pkg/strategy.go) and provide a **csv** a dataset with the following format:
+The price data used to run the backtests can be from any time interval, but it must contain a [**OHLCV**](https://en.wikipedia.org/wiki/Open-high-low-close_chart) structure _(**O**pen **H**igh **L**ow **C**lose **V**olume)_. It is possible to load data from **csv** files and the [**postgresql** database](https://www.postgresql.org/) with the following format:
 
 | open      | high      | low       | close     | volume     
 |:---------:|:---------:|:---------:|:---------:|:----------
 | 7922.0700 | 7924.9900 | 7920.1600 | 7924.7500 | 9.90606700 
 | 7923.4300 | 7929.1400 | 7920.8000 | 7922.9000 | 15.83760800
 | 7923.1300 | 7934.0900 | 7922.9000 | 7932.2600 | 9.98577900
+
+## Usage
+To start using **kate backtester** you will need to implement the [**Strategy interface**](https://github.com/victorl2/kate-backtester/blob/main/pkg/strategy.go) and provide a **csv** a dataset for execution.
 
 The Strategy interface contains 3 functions that describe how/when to trade:
 
