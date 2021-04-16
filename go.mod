@@ -1,4 +1,4 @@
-module github.com/victorl2/kate-backtest
+module github.com/victorl2/kate-backtester
 
 go 1.16
 
