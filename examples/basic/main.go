@@ -6,7 +6,7 @@ import (
 	kate "github.com/victorl2/kate-backtester/pkg"
 )
 
-type simpleStrategy struct{}
+type SimpleStrategy struct{}
 
 func main() {
 	data, err := kate.PricesFromCSV("../../testdata/ETHUSD5.csv")
@@ -15,13 +15,13 @@ func main() {
 		panic("could`t load data." + err.Error())
 	}
 
-	kate.NewBacktester(&simpleStrategy{}, data)
-	backtester := kate.NewBacktester(&simpleStrategy{}, data)
+	kate.NewBacktester(&SimpleStrategy{}, data)
+	backtester := kate.NewBacktester(&SimpleStrategy{}, data)
 	fmt.Println(backtester.Run())
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *simpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
+func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
 	if latestPrices[latest].Close > latestPrices[latest-1].Close {
@@ -31,7 +31,7 @@ func (stg *simpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.
 }
 
 //SetStoploss defines a stoploss for the current open position
-func (stg *simpleStrategy) SetStoploss(openPosition kate.Position) *kate.StoplossEvt {
+func (stg *SimpleStrategy) SetStoploss(openPosition kate.Position) *kate.StoplossEvt {
 	if openPosition.Direction == kate.LONG && openPosition.Stoploss <= 0 {
 		return &kate.StoplossEvt{Price: openPosition.EntryPrice * 0.995}
 	}
@@ -39,7 +39,7 @@ func (stg *simpleStrategy) SetStoploss(openPosition kate.Position) *kate.Stoplos
 }
 
 //SetTakeProfit defines a takeprofit for the current open position
-func (stg *simpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeProfitEvt {
+func (stg *SimpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeProfitEvt {
 	if openPosition.Direction == kate.LONG && openPosition.TakeProfit <= 0 {
 		return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}
 	}

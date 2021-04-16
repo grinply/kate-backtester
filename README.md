@@ -7,7 +7,7 @@
 A fast and simple backtest implementation for **algorithmic trading** focused on [cryptocurrencies](https://en.wikipedia.org/wiki/Cryptocurrency#:~:text=A%20cryptocurrency%2C%20crypto%20currency%20or,creation%20of%20additional%20coins%2C%20and) written in [GoLang](https://golang.org/).
 
 ## Data
-The price data used to run the backtests can be from any time interval, but it must contain a [**OHLCV**](https://en.wikipedia.org/wiki/Open-high-low-close_chart) structure _(**O**pen **H**igh **L**ow **C**lose **V**olume)_. It is possible to load data from **csv** files and the [**postgresql** database](https://www.postgresql.org/) with the following format:
+The price data used to run the backtests can be from any time interval, but it must contain a [**OHLCV**](https://en.wikipedia.org/wiki/Open-high-low-close_chart) structure _(**O**pen **H**igh **L**ow **C**lose **V**olume)_. It is possible to load data from **csv** files with the following format:
 
 | open      | high      | low       | close     | volume     
 |:---------:|:---------:|:---------:|:---------:|:----------
@@ -27,7 +27,7 @@ As the name already implies this function is responsible for setting the stoplos
 ### SetTakeProfit
 This function has the same behavior as **SetStoploss** but instead it manipulates the take profit price. A example return would be `return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}`
 
-A basic implementation where a strategy opens a long position every time the latest close price is higher than the last close is: 
+A basic implementation where a strategy opens a long position every time the latest [close price](https://www.dailyfx.com/education/candlestick-patterns/how-to-read-candlestick-charts.html#:~:text=Close%20Price%3A,depends%20on%20the%20chart%20settings).) is higher than the last close is: 
 
 ```go
 package main
@@ -38,7 +38,7 @@ import (
 	kate "github.com/victorl2/kate-backtester/pkg"
 )
 
-type simpleStrategy struct{}
+type SimpleStrategy struct{}
 
 func main() {
 	data, err := kate.PricesFromCSV("../../testdata/ETHUSD5.csv")
@@ -46,13 +46,13 @@ func main() {
 	if err != nil {
 		panic("could`t load data." + err.Error())
 	}
-    kate.NewBacktester(&simpleStrategy{}, data)
-	backtester := kate.NewBacktester(&simpleStrategy{}, data)
+    kate.NewBacktester(&SimpleStrategy{}, data)
+	backtester := kate.NewBacktester(&SimpleStrategy{}, data)
 	fmt.Println(backtester.Run())
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *simpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
+func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
 	if latestPrices[latest].Close > latestPrices[latest-1].Close {
@@ -62,7 +62,7 @@ func (stg *simpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.
 }
 
 //SetStoploss defines a stoploss for the current open position
-func (stg *simpleStrategy) SetStoploss(openPosition kate.Position) *kate.StoplossEvt {
+func (stg *SimpleStrategy) SetStoploss(openPosition kate.Position) *kate.StoplossEvt {
 	if openPosition.Direction == kate.LONG && openPosition.Stoploss <= 0 {
 		return &kate.StoplossEvt{Price: openPosition.EntryPrice * 0.995}
 	}
@@ -70,7 +70,7 @@ func (stg *simpleStrategy) SetStoploss(openPosition kate.Position) *kate.Stoplos
 }
 
 //SetTakeProfit defines a takeprofit for the current open position
-func (stg *simpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeProfitEvt {
+func (stg *SimpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeProfitEvt {
 	if openPosition.Direction == kate.LONG && openPosition.TakeProfit <= 0 {
 		return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}
 	}
