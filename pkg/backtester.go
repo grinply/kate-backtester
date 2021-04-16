@@ -92,7 +92,7 @@ func (bt *Backtester) processNewPriceEvt(newPrice *AggregatedDataPoints) {
 	bt.exchangeHandler.onPriceChange(latestPrice)
 
 	if bt.exchangeHandler.openPosition == nil {
-		if evt := bt.myStrategy.ProcessNextPriceData(newPrice.datapoints); evt != nil {
+		if evt := bt.myStrategy.OpenNewPosition(newPrice.datapoints); evt != nil {
 			bt.eventQueue.AddEvent(evt)
 		}
 		return

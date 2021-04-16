@@ -55,8 +55,8 @@ func newSimpleStrategy() *simpleStrategy {
 	return &simpleStrategy{}
 }
 
-//ProcessNextPriceData process the next data point and checks if a position should be opened
-func (strategy *simpleStrategy) ProcessNextPriceData(latestPrices []DataPoint) *OpenPositionEvt {
+//OpenNewPosition process the next data point and checks if a position should be opened
+func (strategy *simpleStrategy) OpenNewPosition(latestPrices []DataPoint) *OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
 	if latestPrices[latest].Close > latestPrices[latest-1].Close {

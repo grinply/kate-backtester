@@ -12,9 +12,9 @@ const (
 
 //Strategy defines how/when trades should be opened and how stoploss/takeprofits should be set in a simulated run
 type Strategy interface {
-	//ProcessNextPriceData check if it should open or close position
+	//OpenNewPosition check if a position should be open
 	//the latestPrices represent the most recent price data as defined in the window of the backtest
-	ProcessNextPriceData(latestPrices []DataPoint) *OpenPositionEvt
+	OpenNewPosition(latestPrices []DataPoint) *OpenPositionEvt
 
 	//SetStoploss [Optional] defines a price where a stoploss will be triggered closing the position in loss
 	//The SetStoploss is called with updated unrealizedPnl everytime new price data is available
