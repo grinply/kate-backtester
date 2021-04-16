@@ -41,8 +41,12 @@ func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, opti
 	}
 }
 
-func (bt *Backtester) SetFixedTradeAmount(amount float64) {
+func (bt *Backtester) SetBalance(amount float64) {
+	bt.exchangeHandler.balance = amount
+}
 
+func (bt *Backtester) SetFixedTradeAmount(amount float64) {
+	bt.exchangeHandler.fixedTradeAmount = amount
 }
 
 //Run executes a trading simulation for the provided configuration on the Backtester
@@ -85,11 +89,10 @@ func (bt *Backtester) processNewPriceEvt(newPrice *AggregatedDataPoints) {
 	latestPrice := newPrice.datapoints[len(newPrice.datapoints)-1]
 	bt.exchangeHandler.onPriceChange(latestPrice)
 
-	if evt := bt.myStrategy.ProcessNextPriceData(newPrice.datapoints); evt != nil {
-		bt.eventQueue.AddEvent(evt)
-	}
-
 	if bt.exchangeHandler.openPosition == nil {
+		if evt := bt.myStrategy.ProcessNextPriceData(newPrice.datapoints); evt != nil {
+			bt.eventQueue.AddEvent(evt)
+		}
 		return
 	}
 
