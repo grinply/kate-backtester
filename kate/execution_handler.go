@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 import (
 	"fmt"
@@ -126,8 +126,8 @@ func (handler *ExchangeHandler) SetTakeProfit(price float64) error {
 
 //OnPriceChange emulates the price change for the asset.
 //Positions may be closed by: take profit, stoploss or liquidations.
-func (handler *ExchangeHandler) onPriceChange(newPrice DataPoint) {
-	handler.currentPrice = newPrice.Close
+func (handler *ExchangeHandler) onPriceChange(newPrice OHLCV) {
+	handler.currentPrice = newPrice.Close()
 	if handler.openPosition == nil {
 		return
 	}
@@ -136,41 +136,41 @@ func (handler *ExchangeHandler) onPriceChange(newPrice DataPoint) {
 		handler.checkLiquidation(newPrice) {
 		return //Position closed successfully
 	}
-	handler.updateUnrealizedPNL(newPrice.Close)
+	handler.updateUnrealizedPNL(newPrice.Close())
 }
 
 func (handler *ExchangeHandler) updateUnrealizedPNL(latestPrice float64) {
 	handler.openPosition.UnrealizedPNL = handler.marketHandler.unrealizedPNL(handler.openPosition, latestPrice)
 }
 
-func (handler *ExchangeHandler) checkCloseShorts(newPrice DataPoint) bool {
+func (handler *ExchangeHandler) checkCloseShorts(newPrice OHLCV) bool {
 	if handler.openPosition.Direction != SHORT {
 		return false
 	}
 
-	if handler.openPosition.TakeProfit > 0 && newPrice.Low <= handler.openPosition.TakeProfit {
+	if handler.openPosition.TakeProfit > 0 && newPrice.Low() <= handler.openPosition.TakeProfit {
 		handler.closePosition(handler.openPosition.TakeProfit, MakerTransition)
 		return true
 	}
 
-	if handler.openPosition.Stoploss > 0 && newPrice.High >= handler.openPosition.Stoploss {
+	if handler.openPosition.Stoploss > 0 && newPrice.High() >= handler.openPosition.Stoploss {
 		handler.closePosition(handler.openPosition.Stoploss, TakerTransition)
 		return true
 	}
 	return false
 }
 
-func (handler *ExchangeHandler) checkCloseLongs(newPrice DataPoint) bool {
+func (handler *ExchangeHandler) checkCloseLongs(newPrice OHLCV) bool {
 	if handler.openPosition.Direction != LONG {
 		return false
 	}
 
-	if handler.openPosition.TakeProfit > 0 && newPrice.High >= handler.openPosition.TakeProfit {
+	if handler.openPosition.TakeProfit > 0 && newPrice.High() >= handler.openPosition.TakeProfit {
 		handler.closePosition(handler.openPosition.TakeProfit, MakerTransition)
 		return true
 	}
 
-	if handler.openPosition.Stoploss > 0 && newPrice.Low <= handler.openPosition.Stoploss {
+	if handler.openPosition.Stoploss > 0 && newPrice.Low() <= handler.openPosition.Stoploss {
 		handler.closePosition(handler.openPosition.Stoploss, TakerTransition)
 		return true
 	}
@@ -191,13 +191,13 @@ func (handler *ExchangeHandler) closePosition(closePrice float64, transition Pos
 }
 
 //checkLiquidation verifies if a open position should be liquidated
-func (handler *ExchangeHandler) checkLiquidation(newPrice DataPoint) bool {
-	if handler.openPosition.Direction == LONG && handler.openPosition.LiquidationPrice >= newPrice.Low {
+func (handler *ExchangeHandler) checkLiquidation(newPrice OHLCV) bool {
+	if handler.openPosition.Direction == LONG && handler.openPosition.LiquidationPrice >= newPrice.Low() {
 		handler.closePosition(handler.openPosition.LiquidationPrice, Liquidation)
 		return true
 	}
 
-	if handler.openPosition.Direction == SHORT && handler.openPosition.LiquidationPrice <= newPrice.High {
+	if handler.openPosition.Direction == SHORT && handler.openPosition.LiquidationPrice <= newPrice.High() {
 		handler.closePosition(handler.openPosition.LiquidationPrice, Liquidation)
 		return true
 	}

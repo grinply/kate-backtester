@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	kate "github.com/victorl2/kate-backtester/pkg"
+	"github.com/victorl2/kate-backtester/kate"
 )
 
 //SimpleStrategy is a basic trading strategy that open long positions when prices rise
@@ -22,15 +22,15 @@ func main() {
 }
 
 //PreProcessIndicators allows the pre processing of indicators
-func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
+func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.OHLCV, isPositionOpen bool) {
 	//No indicators to process
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
+func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.OHLCV) *kate.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
-	if latestPrices[latest].Close > latestPrices[latest-1].Close {
+	if latestPrices[latest].Close() > latestPrices[latest-1].Close() {
 		return &kate.OpenPositionEvt{Direction: kate.LONG, Leverage: 30}
 	}
 	return nil

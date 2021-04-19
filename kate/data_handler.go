@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 import (
 	"bufio"
@@ -14,13 +14,7 @@ import (
 //DataHandler is a wrapper that packages the required data for running backtesting simulation.
 type DataHandler struct {
 	counter, windowSize int
-	prices              []DataPoint
-}
-
-//DataPoint is a unit that encapsulates OHLCV price data
-type DataPoint struct {
-	Event
-	Open, High, Low, Close, Volume float64
+	prices              []OHLCV
 }
 
 //Position is the representation of a traded position
@@ -40,14 +34,14 @@ type Position struct {
 //AggregatedDataPoints is a group datapoints
 type AggregatedDataPoints struct {
 	Event
-	datapoints []DataPoint
+	datapoints []OHLCV
 }
 
 //Required columns in the CSV file
 var csvColumns = []string{"open", "high", "low", "close", "volume"}
 
 //newDataHandler creates and initializes a DataHandler with pricing data and executes the required setup
-func newDataHandler(prices []DataPoint, windowSize int) *DataHandler {
+func newDataHandler(prices []OHLCV, windowSize int) *DataHandler {
 	return &DataHandler{
 		windowSize: windowSize,
 		prices:     prices,
@@ -79,7 +73,7 @@ func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 				Make sure the CSV has the columns Open, High, Low, Close, Volume`)
 	}
 
-	var prices []DataPoint
+	var prices []OHLCV
 	for {
 		line, error := reader.Read()
 		if error == io.EOF {
@@ -99,12 +93,12 @@ func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 
 		}
 
-		prices = append(prices, DataPoint{
-			Open:   numbers[0],
-			High:   numbers[1],
-			Low:    numbers[2],
-			Close:  numbers[3],
-			Volume: numbers[4],
+		prices = append(prices, &DataPoint{
+			open:   numbers[0],
+			high:   numbers[1],
+			low:    numbers[2],
+			close:  numbers[3],
+			volume: numbers[4],
 		})
 	}
 

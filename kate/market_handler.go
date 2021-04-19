@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 //MarketHandler describes market expecific functionality
 type MarketHandler interface {

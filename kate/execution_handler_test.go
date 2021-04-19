@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 import (
 	"math"
@@ -27,8 +27,8 @@ func TestOpenCloseUSDPosition(t *testing.T) {
 	var tests = []struct {
 		direction            Direction
 		leverage             uint
-		openPrice            DataPoint
-		closePrice           DataPoint
+		openPrice            OHLCV
+		closePrice           OHLCV
 		makerFee, TakerFee   float64
 		takeProfit, stoploss float64
 		percentagePerTrade   float64
@@ -95,6 +95,6 @@ func isEqual(x, y float64) bool {
 	return math.Abs(x-y) < maxError
 }
 
-func CreateData(value float64) DataPoint {
-	return DataPoint{Open: value, High: value, Low: value, Close: value, Volume: value}
+func CreateData(value float64) OHLCV {
+	return DataPoint{open: value, high: value, low: value, close: value, volume: value}
 }

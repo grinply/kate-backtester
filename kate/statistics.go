@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 //Statistics are the results based on trades executed on a backtest run
 type Statistics struct {

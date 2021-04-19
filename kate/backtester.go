@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 //Backtester allows backtesting trading strategies on crypto markets
 type Backtester struct {

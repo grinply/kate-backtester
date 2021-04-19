@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 import (
 	"io/ioutil"
@@ -17,22 +17,22 @@ func TestLoadCSVData(t *testing.T) {
 	}
 
 	firstPrice := DataPoint{
-		Open:   746.25,
-		High:   747.25,
-		Low:    746.2,
-		Close:  746.95,
-		Volume: 1045532,
+		open:   746.25,
+		high:   747.25,
+		low:    746.2,
+		close:  746.95,
+		volume: 1045532,
 	}
 	if !reflect.DeepEqual(handler.prices[0], firstPrice) {
 		t.Errorf("The first price in the csv is %v the expected was %v", handler.prices[0], firstPrice)
 	}
 
 	lastPrice := DataPoint{
-		Open:   744.4,
-		High:   744.6,
-		Low:    744.4,
-		Close:  744.6,
-		Volume: 80597,
+		open:   744.4,
+		high:   744.6,
+		low:    744.4,
+		close:  744.6,
+		volume: 80597,
 	}
 
 	if !reflect.DeepEqual(handler.prices[len(handler.prices)-1], lastPrice) {
@@ -40,11 +40,11 @@ func TestLoadCSVData(t *testing.T) {
 	}
 
 	middlePrice := DataPoint{
-		Open:   746.4,
-		High:   746.45,
-		Low:    746.4,
-		Close:  746.45,
-		Volume: 5306,
+		open:   746.4,
+		high:   746.45,
+		low:    746.4,
+		close:  746.45,
+		volume: 5306,
 	}
 	if !reflect.DeepEqual(handler.prices[66], middlePrice) {
 		t.Errorf("The middle price in the csv is %v the expected was %v", handler.prices[66], middlePrice)

@@ -38,7 +38,7 @@ package main
 import (
 	"fmt"
 
-	kate "github.com/victorl2/kate-backtester/pkg"
+	"github.com/victorl2/kate-backtester/kate"
 )
 
 type SimpleStrategy struct{}
@@ -55,10 +55,10 @@ func main() {
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
+func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.OHLCV) *kate.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
-	if latestPrices[latest].Close > latestPrices[latest-1].Close {
+	if latestPrices[latest].Close() > latestPrices[latest-1].Close() {
 		return &kate.OpenPositionEvt{Direction: kate.LONG, Leverage: 30}
 	}
 	return nil
@@ -81,7 +81,7 @@ func (stg *SimpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeP
 }
 
 //PreProcessIndicators allows the pre processing of indicators
-func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
+func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.OHLCV, isPositionOpen bool) {
 	//No indicators to process
 }
 ```

@@ -1,4 +1,4 @@
-package pkg
+package kate
 
 //EventQueue is a queue of events that can be processed when executing a backtest
 type EventQueue struct {
