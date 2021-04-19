@@ -28,7 +28,7 @@ As the name already implies this function is responsible for setting the stoplos
 This function has the same behavior as **SetStoploss** but instead it manipulates the take profit price. A example return would be `return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}`
 
 ### PreProcessIndicators
-Allows the strategy to pre calculate the indicators and values for reuse in the other functions, making the execution faster and less redundant.
+Allows the strategy to pre calculate the indicators and values for reuse in the other functions, making the execution faster and less redundant. This pre processing step is the **first** function called with every new price data avaliable.
 
 A [basic implementation](https://github.com/victorl2/kate-backtester/blob/main/examples/basic/main.go) where a strategy opens a long position every time the latest [close price](https://www.dailyfx.com/education/candlestick-patterns/how-to-read-candlestick-charts.html#:~:text=Close%20Price%3A,depends%20on%20the%20chart%20settings) is higher than the last close is: 
 
