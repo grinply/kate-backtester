@@ -16,7 +16,7 @@ The price data used to run the backtests can be from any time interval, but it m
 | 7923.1300 | 7934.0900 | 7922.9000 | 7932.2600 | 9.98577900
 
 ## Usage
-To start using **kate backtester** you will need to implement the [**Strategy interface**](https://github.com/victorl2/kate-backtester/blob/main/pkg/strategy.go) and provide a **csv** a dataset for execution. The Strategy interface contains 3 functions that describe how/when to trade: **OpenNewPosition**, **SetStoploss** and **SetTakeProfit**.
+To start using **kate backtester** you will need to implement the [**Strategy interface**](https://github.com/victorl2/kate-backtester/blob/main/pkg/strategy.go) and provide a **csv** a dataset for execution. The Strategy interface contains 4 functions that describe how/when to trade: **OpenNewPosition**, **SetStoploss** , **SetTakeProfit** and **PreProcessIndicators**.
 
 ### OpenNewPosition
 This function is responsible for opening new trade positions when there are none open already, the function is called with every new price data to check, a nil return denotes that no positions should be open yet. When opening a position a OpenPositionEvt is returned containing the **Direction** for the trade _(LONG/SHORT)_ and the desired [leverage](https://blog.earn2trade.com/leverage-trading/), a possible return would be `return &kate.OpenPositionEvt{Direction: kate.LONG, Leverage: 30}`
@@ -27,7 +27,10 @@ As the name already implies this function is responsible for setting the stoplos
 ### SetTakeProfit
 This function has the same behavior as **SetStoploss** but instead it manipulates the take profit price. A example return would be `return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}`
 
-A basic implementation where a strategy opens a long position every time the latest [close price](https://www.dailyfx.com/education/candlestick-patterns/how-to-read-candlestick-charts.html#:~:text=Close%20Price%3A,depends%20on%20the%20chart%20settings).) is higher than the last close is: 
+### PreProcessIndicators
+Allows the strategy to pre calculate the indicators and values for reuse in the other functions, making the execution faster and less redundant.
+
+A [basic implementation](https://github.com/victorl2/kate-backtester/blob/main/examples/basic/main.go) where a strategy opens a long position every time the latest [close price](https://www.dailyfx.com/education/candlestick-patterns/how-to-read-candlestick-charts.html#:~:text=Close%20Price%3A,depends%20on%20the%20chart%20settings) is higher than the last close is: 
 
 ```go
 package main
@@ -75,5 +78,10 @@ func (stg *SimpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeP
 		return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}
 	}
 	return nil
+}
+
+//PreProcessIndicators allows the pre processing of indicators
+func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
+	//No indicators to process
 }
 ```

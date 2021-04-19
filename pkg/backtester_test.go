@@ -55,6 +55,9 @@ func newSimpleStrategy() *simpleStrategy {
 	return &simpleStrategy{}
 }
 
+//PreProcessIndicators nothing to do
+func (strategy *simpleStrategy) PreProcessIndicators(latestPrices []DataPoint, isPositionOpen bool) {}
+
 //OpenNewPosition process the next data point and checks if a position should be opened
 func (strategy *simpleStrategy) OpenNewPosition(latestPrices []DataPoint) *OpenPositionEvt {
 	latest := len(latestPrices) - 1

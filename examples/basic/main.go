@@ -6,6 +6,7 @@ import (
 	kate "github.com/victorl2/kate-backtester/pkg"
 )
 
+//SimpleStrategy is a basic trading strategy that open long positions when prices rise
 type SimpleStrategy struct{}
 
 func main() {
@@ -18,6 +19,11 @@ func main() {
 	kate.NewBacktester(&SimpleStrategy{}, data)
 	backtester := kate.NewBacktester(&SimpleStrategy{}, data)
 	fmt.Println(backtester.Run())
+}
+
+//PreProcessIndicators allows the pre processing of indicators
+func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
+	//No indicators to process
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
