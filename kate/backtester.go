@@ -92,7 +92,7 @@ func (bt *Backtester) processNewPriceEvt(newPrice *AggregatedDataPoints) {
 	latestPrice := newPrice.datapoints[len(newPrice.datapoints)-1]
 	bt.exchangeHandler.onPriceChange(latestPrice)
 
-	var isPositionOpen = bt.exchangeHandler.openPosition == nil
+	var isPositionOpen = bt.exchangeHandler.openPosition != nil
 
 	bt.myStrategy.PreProcessIndicators(newPrice.datapoints, isPositionOpen)
 
