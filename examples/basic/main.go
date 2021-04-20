@@ -22,12 +22,12 @@ func main() {
 }
 
 //PreProcessIndicators allows the pre processing of indicators
-func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.OHLCV, isPositionOpen bool) {
+func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
 	//No indicators to process
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.OHLCV) *kate.OpenPositionEvt {
+func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
 	if latestPrices[latest].Close() > latestPrices[latest-1].Close() {

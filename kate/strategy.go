@@ -15,11 +15,11 @@ type Strategy interface {
 
 	//PreProcessIndicators is the first function called when a new price data is avaliable allowing the strategy
 	//to precalculate indicators and make them available for reuse
-	PreProcessIndicators(latestPrices []OHLCV, isPositionOpen bool)
+	PreProcessIndicators(latestPrices []DataPoint, isPositionOpen bool)
 
 	//OpenNewPosition check if a position should be open
 	//the latestPrices represent the most recent price data as defined in the window of the backtest
-	OpenNewPosition(latestPrices []OHLCV) *OpenPositionEvt
+	OpenNewPosition(latestPrices []DataPoint) *OpenPositionEvt
 
 	//SetStoploss [Optional] defines a price where a stoploss will be triggered closing the position in loss
 	//The SetStoploss is called with updated unrealizedPnl everytime new price data is available

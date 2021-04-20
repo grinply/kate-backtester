@@ -56,10 +56,10 @@ func newSimpleStrategy() *simpleStrategy {
 }
 
 //PreProcessIndicators nothing to do
-func (strategy *simpleStrategy) PreProcessIndicators(latestPrices []OHLCV, isPositionOpen bool) {}
+func (strategy *simpleStrategy) PreProcessIndicators(latestPrices []DataPoint, isPositionOpen bool) {}
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (strategy *simpleStrategy) OpenNewPosition(latestPrices []OHLCV) *OpenPositionEvt {
+func (strategy *simpleStrategy) OpenNewPosition(latestPrices []DataPoint) *OpenPositionEvt {
 	latest := len(latestPrices) - 1
 
 	if latestPrices[latest].Close() > latestPrices[latest-1].Close() {
