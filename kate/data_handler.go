@@ -62,6 +62,11 @@ func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 	return nil
 }
 
+//SetWindow defines the range of values that will be avaliable on each step through the data points
+func (handler *DataHandler) setWindow(windowSize int) {
+	handler.windowSize = windowSize
+}
+
 //PricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error occurred
 func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 	csvFile, _ := os.Open(csvFilePath)
