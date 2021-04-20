@@ -40,7 +40,7 @@ func (bt *Backtester) calculateStatistics(initialBalance float64) *Statistics {
 		TotalTrades:     len(tradeHistory),
 		WinRate:         float64(wins) / float64(len(tradeHistory)),
 		MaxDrawdown:     (peakProfit - bottomProfit) / peakProfit,
-		TotalDataPoints: len(bt.dataHandler.prices),
+		TotalDataPoints: len(bt.dataHandler.Prices),
 	}
 
 	stats.SharpeRatio = sharpe(stats.NetProfit, 0.0, stdDev(balanceHistory))

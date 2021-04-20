@@ -12,8 +12,8 @@ import (
 func TestLoadCSVData(t *testing.T) {
 	handler, _ := PricesFromCSV("../testdata/simple_example.csv")
 
-	if len(handler.prices) != 100 {
-		t.Errorf("The amount of prices is %v the expected amount is 100", len(handler.prices))
+	if len(handler.Prices) != 100 {
+		t.Errorf("The amount of prices is %v the expected amount is 100", len(handler.Prices))
 	}
 
 	firstPrice := DataPoint{
@@ -23,8 +23,8 @@ func TestLoadCSVData(t *testing.T) {
 		close:  746.95,
 		volume: 1045532,
 	}
-	if !reflect.DeepEqual(handler.prices[0], firstPrice) {
-		t.Errorf("The first price in the csv is %v the expected was %v", handler.prices[0], firstPrice)
+	if !reflect.DeepEqual(handler.Prices[0], firstPrice) {
+		t.Errorf("The first price in the csv is %v the expected was %v", handler.Prices[0], firstPrice)
 	}
 
 	lastPrice := DataPoint{
@@ -35,8 +35,8 @@ func TestLoadCSVData(t *testing.T) {
 		volume: 80597,
 	}
 
-	if !reflect.DeepEqual(handler.prices[len(handler.prices)-1], lastPrice) {
-		t.Errorf("The last price in the csv is %v the expected was %v", handler.prices[len(handler.prices)-1], lastPrice)
+	if !reflect.DeepEqual(handler.Prices[len(handler.Prices)-1], lastPrice) {
+		t.Errorf("The last price in the csv is %v the expected was %v", handler.Prices[len(handler.Prices)-1], lastPrice)
 	}
 
 	middlePrice := DataPoint{
@@ -46,8 +46,8 @@ func TestLoadCSVData(t *testing.T) {
 		close:  746.45,
 		volume: 5306,
 	}
-	if !reflect.DeepEqual(handler.prices[66], middlePrice) {
-		t.Errorf("The middle price in the csv is %v the expected was %v", handler.prices[66], middlePrice)
+	if !reflect.DeepEqual(handler.Prices[66], middlePrice) {
+		t.Errorf("The middle price in the csv is %v the expected was %v", handler.Prices[66], middlePrice)
 	}
 
 }

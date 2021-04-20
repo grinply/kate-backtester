@@ -13,8 +13,8 @@ import (
 
 //DataHandler is a wrapper that packages the required data for running backtesting simulation.
 type DataHandler struct {
-	counter, windowSize int
-	prices              []DataPoint
+	Counter, WindowSize int
+	Prices              []DataPoint
 }
 
 //Position is the representation of a traded position
@@ -43,20 +43,20 @@ var csvColumns = []string{"open", "high", "low", "close", "volume"}
 //newDataHandler creates and initializes a DataHandler with pricing data and executes the required setup
 func newDataHandler(prices []DataPoint, windowSize int) *DataHandler {
 	return &DataHandler{
-		windowSize: windowSize,
-		prices:     prices,
-		counter:    windowSize,
+		WindowSize: windowSize,
+		Prices:     prices,
+		Counter:    windowSize,
 	}
 }
 
 //NextValues returns AggregatedDataPoints with the next values in the stream of datapoints (containing the lastest windowSize of values).
 //a nil return denotes the end for the stream
 func (handler *DataHandler) nextValues() *AggregatedDataPoints {
-	if handler.counter < len(handler.prices) {
+	if handler.Counter < len(handler.Prices) {
 		data := &AggregatedDataPoints{
-			datapoints: handler.prices[handler.counter-handler.windowSize : handler.counter],
+			datapoints: handler.Prices[handler.Counter-handler.WindowSize : handler.Counter],
 		}
-		handler.counter++
+		handler.Counter++
 		return data
 	}
 	return nil
@@ -64,8 +64,8 @@ func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 
 //SetWindow defines the range of values that will be avaliable on each step through the data points
 func (handler *DataHandler) SetWindow(windowSize int) {
-	handler.windowSize = windowSize
-	handler.counter = windowSize
+	handler.WindowSize = windowSize
+	handler.Counter = windowSize
 }
 
 //PricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error occurred
