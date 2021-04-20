@@ -63,7 +63,7 @@ func (handler *DataHandler) nextValues() *AggregatedDataPoints {
 }
 
 //SetWindow defines the range of values that will be avaliable on each step through the data points
-func (handler *DataHandler) setWindow(windowSize int) {
+func (handler *DataHandler) SetWindow(windowSize int) {
 	handler.windowSize = windowSize
 }
 
