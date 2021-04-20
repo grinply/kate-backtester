@@ -34,7 +34,7 @@ func NewBacktester(mystrategy Strategy, dataHandler *DataHandler) *Backtester {
 func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, options BacktestOptions) *Backtester {
 	exchangeHandler := NewExchangeHandler(options.Market, options.MakerFeePercentage, options.TakerFeePercentage,
 		options.percentagePerTrade)
-	dataHandler.setWindow(int(options.PriceWindow))
+	dataHandler.SetWindow(int(options.PriceWindow))
 	return &Backtester{
 		exchangeHandler: exchangeHandler,
 		dataHandler:     dataHandler,
