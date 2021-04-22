@@ -25,10 +25,10 @@ func main() {
 }
 
 //PreProcessIndicators allows the pre processing of indicators
-func (strategy *SimpleStrategy) PreProcessIndicators(latestPrice kate.DataPoint) {
+func (stg *SimpleStrategy) PreProcessIndicators(latestPrice kate.DataPoint) {
 	//No indicators to process
-	strategy.lastPrice = strategy.currentPrice
-	strategy.currentPrice = &latestPrice
+	stg.lastPrice = stg.currentPrice
+	stg.currentPrice = &latestPrice
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened

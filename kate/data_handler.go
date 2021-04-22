@@ -59,7 +59,7 @@ func (handler *DataHandler) nextValue() *DataPoint {
 	return nil
 }
 
-//SetWindow defines the range of values that will be avaliable on each step through the data points
+//SetWindow defines the range of values that will be available on each step through the data points
 func (handler *DataHandler) SetWindow(windowSize int) {
 	handler.WindowSize = windowSize
 	handler.Counter = windowSize

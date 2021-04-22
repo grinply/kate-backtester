@@ -13,7 +13,7 @@ const (
 //Strategy defines how/when trades should be opened and how stoploss/takeprofits should be set in a simulated run
 type Strategy interface {
 
-	//PreProcessIndicators is the first function called when a new price data is avaliable allowing the strategy
+	//PreProcessIndicators is the first function called when a new price data is available allowing the strategy
 	//to precalculate indicators and make them available for reuse
 	PreProcessIndicators(latestPrice DataPoint)
 
