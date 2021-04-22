@@ -7,7 +7,10 @@ import (
 )
 
 //SimpleStrategy is a basic trading strategy that open long positions when prices rise
-type SimpleStrategy struct{}
+type SimpleStrategy struct {
+	lastPrice    *kate.DataPoint
+	currentPrice *kate.DataPoint
+}
 
 func main() {
 	data, err := kate.PricesFromCSV("../../testdata/ETHUSD5.csv")
@@ -22,15 +25,15 @@ func main() {
 }
 
 //PreProcessIndicators allows the pre processing of indicators
-func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
+func (strategy *SimpleStrategy) PreProcessIndicators(latestPrice kate.DataPoint) {
 	//No indicators to process
+	strategy.lastPrice = strategy.currentPrice
+	strategy.currentPrice = &latestPrice
 }
 
 //OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
-	latest := len(latestPrices) - 1
-
-	if latestPrices[latest].Close() > latestPrices[latest-1].Close() {
+func (stg *SimpleStrategy) OpenNewPosition(latestPrice kate.DataPoint) *kate.OpenPositionEvt {
+	if stg.lastPrice != nil && stg.currentPrice.Close() > stg.lastPrice.Close() {
 		return &kate.OpenPositionEvt{Direction: kate.LONG, Leverage: 30}
 	}
 	return nil

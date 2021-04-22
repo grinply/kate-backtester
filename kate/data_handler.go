@@ -41,23 +41,20 @@ type AggregatedDataPoints struct {
 var csvColumns = []string{"open", "high", "low", "close", "volume"}
 
 //newDataHandler creates and initializes a DataHandler with pricing data and executes the required setup
-func newDataHandler(prices []DataPoint, windowSize int) *DataHandler {
+func newDataHandler(prices []DataPoint) *DataHandler {
 	return &DataHandler{
-		WindowSize: windowSize,
-		Prices:     prices,
-		Counter:    windowSize,
+		Prices:  prices,
+		Counter: 0,
 	}
 }
 
-//NextValues returns AggregatedDataPoints with the next values in the stream of datapoints (containing the lastest windowSize of values).
+//NextValue return  the next value in the stream of datapoints.
 //a nil return denotes the end for the stream
-func (handler *DataHandler) nextValues() *AggregatedDataPoints {
+func (handler *DataHandler) nextValue() *DataPoint {
 	if handler.Counter < len(handler.Prices) {
-		data := &AggregatedDataPoints{
-			datapoints: handler.Prices[handler.Counter-handler.WindowSize : handler.Counter],
-		}
+		var price = &handler.Prices[handler.Counter]
 		handler.Counter++
-		return data
+		return price
 	}
 	return nil
 }
@@ -108,7 +105,7 @@ func PricesFromCSV(csvFilePath string) (*DataHandler, error) {
 		})
 	}
 
-	return newDataHandler(prices, 5), nil
+	return newDataHandler(prices), nil
 }
 
 //strToFloat converts a string value to float64, in case of error Panic

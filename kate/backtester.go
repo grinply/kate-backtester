@@ -55,13 +55,15 @@ func (bt *Backtester) SetFixedTradeAmount(amount float64) {
 //Run executes a trading simulation for the provided configuration on the Backtester
 func (bt *Backtester) Run() *Statistics {
 	initialBalance := bt.exchangeHandler.balance
-	var datapoints = bt.dataHandler.nextValues()
+	var hasNextDataPoint = true
 
-	for processed := bt.processNextEvent(); processed || datapoints != nil; processed = bt.processNextEvent() {
+	for processed := bt.processNextEvent(); processed || hasNextDataPoint; processed = bt.processNextEvent() {
 		if !bt.eventQueue.HasNext() {
-			if datapoints = bt.dataHandler.nextValues(); datapoints != nil {
-				bt.eventQueue.AddEvent(datapoints)
+			var newPrice = bt.dataHandler.nextValue()
+			if hasNextDataPoint = newPrice != nil; hasNextDataPoint {
+				bt.eventQueue.AddEvent(newPrice)
 			}
+
 		}
 	}
 	return bt.calculateStatistics(initialBalance)
@@ -75,40 +77,34 @@ func (bt *Backtester) processNextEvent() bool {
 	}
 
 	switch event := bt.eventQueue.NextEvent().(type) {
-	case *AggregatedDataPoints:
-		bt.processNewPriceEvt(event)
+	case *DataPoint:
+		bt.processNewPriceEvt(*event)
 	case *OpenPositionEvt:
 		bt.exchangeHandler.OpenMarketOrder(event.Direction, event.Leverage)
 	case *StoplossEvt:
 		bt.exchangeHandler.SetStoploss(event.Price)
 	case *TakeProfitEvt:
 		bt.exchangeHandler.SetTakeProfit(event.Price)
-
 	}
 	return true
 }
 
-func (bt *Backtester) processNewPriceEvt(newPrice *AggregatedDataPoints) {
-	latestPrice := newPrice.datapoints[len(newPrice.datapoints)-1]
-	bt.exchangeHandler.onPriceChange(latestPrice)
+func (bt *Backtester) processNewPriceEvt(newPrice DataPoint) {
+	bt.exchangeHandler.onPriceChange(newPrice)
+	bt.myStrategy.PreProcessIndicators(newPrice)
 
-	var isPositionOpen = bt.exchangeHandler.openPosition != nil
-
-	bt.myStrategy.PreProcessIndicators(newPrice.datapoints, isPositionOpen)
-
-	if isPositionOpen {
-		if evt := bt.myStrategy.OpenNewPosition(newPrice.datapoints); evt != nil {
+	if bt.exchangeHandler.openPosition == nil {
+		if evt := bt.myStrategy.OpenNewPosition(newPrice); evt != nil {
 			bt.eventQueue.AddEvent(evt)
 		}
-		return
-	}
+	} else {
+		if evt := bt.myStrategy.SetStoploss(*bt.exchangeHandler.openPosition); evt != nil {
+			bt.eventQueue.AddEvent(evt)
+		}
 
-	if evt := bt.myStrategy.SetStoploss(*bt.exchangeHandler.openPosition); evt != nil {
-		bt.eventQueue.AddEvent(evt)
-	}
-
-	if evt := bt.myStrategy.SetTakeProfit(*bt.exchangeHandler.openPosition); evt != nil {
-		bt.eventQueue.AddEvent(evt)
+		if evt := bt.myStrategy.SetTakeProfit(*bt.exchangeHandler.openPosition); evt != nil {
+			bt.eventQueue.AddEvent(evt)
+		}
 	}
 }
 

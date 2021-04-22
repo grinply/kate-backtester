@@ -16,8 +16,10 @@ The price data used to run the backtests can be from any time interval, but it m
 | 7923.1300 | 7934.0900 | 7922.9000 | 7932.2600 | 9.98577900
 
 ## Usage
-To start using **kate backtester** you will need to implement the [**Strategy interface**](https://github.com/victorl2/kate-backtester/blob/main/pkg/strategy.go) and provide a **csv** a dataset for execution. The Strategy interface contains 4 functions that describe how/when to trade: **OpenNewPosition**, **SetStoploss** , **SetTakeProfit** and **PreProcessIndicators**.
+To start using **kate backtester** you will need to implement the [**Strategy interface**](https://github.com/victorl2/kate-backtester/blob/main/pkg/strategy.go) and provide a **csv** a dataset for execution. The Strategy interface contains 4 functions that describe how/when to trade: **PreProcessIndicators**, **OpenNewPosition**, **SetStoploss** and **SetTakeProfit**.
 
+### PreProcessIndicators
+Allows the strategy to pre calculate the indicators and values for reuse in the other functions, making the execution faster and less redundant. This pre processing step is the **first** function called with every new price data avaliable.
 ### OpenNewPosition
 This function is responsible for opening new trade positions when there are none open already, the function is called with every new price data to check, a nil return denotes that no positions should be open yet. When opening a position a OpenPositionEvt is returned containing the **Direction** for the trade _(LONG/SHORT)_ and the desired [leverage](https://blog.earn2trade.com/leverage-trading/), a possible return would be `return &kate.OpenPositionEvt{Direction: kate.LONG, Leverage: 30}`
 
@@ -26,9 +28,6 @@ As the name already implies this function is responsible for setting the stoplos
 
 ### SetTakeProfit
 This function has the same behavior as **SetStoploss** but instead it manipulates the take profit price. A example return would be `return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}`
-
-### PreProcessIndicators
-Allows the strategy to pre calculate the indicators and values for reuse in the other functions, making the execution faster and less redundant. This pre processing step is the **first** function called with every new price data avaliable.
 
 A [basic implementation](https://github.com/victorl2/kate-backtester/blob/main/examples/basic/main.go) where a strategy opens a long position every time the latest [close price](https://www.dailyfx.com/education/candlestick-patterns/how-to-read-candlestick-charts.html#:~:text=Close%20Price%3A,depends%20on%20the%20chart%20settings) is higher than the last close is: 
 
@@ -41,7 +40,10 @@ import (
 	"github.com/victorl2/kate-backtester/kate"
 )
 
-type SimpleStrategy struct{}
+type SimpleStrategy struct{
+	lastPrice    *kate.DataPoint
+	currentPrice *kate.DataPoint
+}
 
 func main() {
 	data, err := kate.PricesFromCSV("../../testdata/ETHUSD5.csv")
@@ -54,11 +56,15 @@ func main() {
 	fmt.Println(backtester.Run())
 }
 
-//OpenNewPosition process the next data point and checks if a position should be opened
-func (stg *SimpleStrategy) OpenNewPosition(latestPrices []kate.DataPoint) *kate.OpenPositionEvt {
-	latest := len(latestPrices) - 1
+//PreProcessIndicators allows the pre processing of indicators
+func (stg *SimpleStrategy) PreProcessIndicators(latestPrices kate.DataPoint, isPositionOpen bool) {
+	stg.lastPrice = strategy.currentPrice
+	stg.currentPrice = &latestPrice
+}
 
-	if latestPrices[latest].Close() > latestPrices[latest-1].Close() {
+//OpenNewPosition process the next data point and checks if a position should be opened
+func (stg *SimpleStrategy) OpenNewPosition(latestPrice kate.DataPoint) *kate.OpenPositionEvt {
+	if stg.lastPrice != nil && stg.currentPrice.Close() > stg.lastPrice.Close() {
 		return &kate.OpenPositionEvt{Direction: kate.LONG, Leverage: 30}
 	}
 	return nil
@@ -78,10 +84,5 @@ func (stg *SimpleStrategy) SetTakeProfit(openPosition kate.Position) *kate.TakeP
 		return &kate.TakeProfitEvt{Price: openPosition.EntryPrice * 1.005}
 	}
 	return nil
-}
-
-//PreProcessIndicators allows the pre processing of indicators
-func (strategy *SimpleStrategy) PreProcessIndicators(latestPrices []kate.DataPoint, isPositionOpen bool) {
-	//No indicators to process
 }
 ```
