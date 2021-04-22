@@ -57,7 +57,7 @@ func main() {
 }
 
 //PreProcessIndicators allows the pre processing of indicators
-func (stg *SimpleStrategy) PreProcessIndicators(latestPrices kate.DataPoint, isPositionOpen bool) {
+func (stg *SimpleStrategy) PreProcessIndicators(latestPrice kate.DataPoint) {
 	stg.lastPrice = strategy.currentPrice
 	stg.currentPrice = &latestPrice
 }
