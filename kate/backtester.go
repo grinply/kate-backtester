@@ -11,7 +11,6 @@ type Backtester struct {
 //BacktestOptions is general settings for running a backtest
 type BacktestOptions struct {
 	TradedPair         string //Must follow the format: BTC/USD, ETH/USDT ...
-	PriceWindow        uint
 	Market             MarketType
 	MakerFeePercentage float64
 	TakerFeePercentage float64
@@ -34,7 +33,6 @@ func NewBacktester(mystrategy Strategy, dataHandler *DataHandler) *Backtester {
 func NewCustomizedBacktester(mystrategy Strategy, dataHandler *DataHandler, options BacktestOptions) *Backtester {
 	exchangeHandler := NewExchangeHandler(options.Market, options.MakerFeePercentage, options.TakerFeePercentage,
 		options.percentagePerTrade)
-	dataHandler.SetWindow(int(options.PriceWindow))
 	return &Backtester{
 		exchangeHandler: exchangeHandler,
 		dataHandler:     dataHandler,
@@ -55,30 +53,22 @@ func (bt *Backtester) SetFixedTradeAmount(amount float64) {
 //Run executes a trading simulation for the provided configuration on the Backtester
 func (bt *Backtester) Run() *Statistics {
 	initialBalance := bt.exchangeHandler.balance
-	var hasNextDataPoint = true
 
-	for processed := bt.processNextEvent(); processed || hasNextDataPoint; processed = bt.processNextEvent() {
-		if !bt.eventQueue.HasNext() {
-			var newPrice = bt.dataHandler.nextValue()
-			if hasNextDataPoint = newPrice != nil; hasNextDataPoint {
-				bt.eventQueue.AddEvent(newPrice)
-			}
-
+	for _, candle := range bt.dataHandler.Prices {
+		for bt.eventQueue.HasNext() {
+			bt.processNextEvent()
 		}
+		bt.eventQueue.AddEvent(candle)
 	}
+
 	return bt.calculateStatistics(initialBalance)
 }
 
 //processNextEvent process the next event in the queue if the queue is not empty.
-//returns a bool indicating if the event was processed or not
-func (bt *Backtester) processNextEvent() bool {
-	if !bt.eventQueue.HasNext() {
-		return false
-	}
-
+func (bt *Backtester) processNextEvent() {
 	switch event := bt.eventQueue.NextEvent().(type) {
-	case *DataPoint:
-		bt.processNewPriceEvt(*event)
+	case DataPoint:
+		bt.processNewPriceEvt(event)
 	case *OpenPositionEvt:
 		bt.exchangeHandler.OpenMarketOrder(event.Direction, event.Leverage)
 	case *StoplossEvt:
@@ -86,7 +76,6 @@ func (bt *Backtester) processNextEvent() bool {
 	case *TakeProfitEvt:
 		bt.exchangeHandler.SetTakeProfit(event.Price)
 	}
-	return true
 }
 
 func (bt *Backtester) processNewPriceEvt(newPrice DataPoint) {

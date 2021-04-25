@@ -13,8 +13,7 @@ import (
 
 //DataHandler is a wrapper that packages the required data for running backtesting simulation.
 type DataHandler struct {
-	Counter, WindowSize int
-	Prices              []DataPoint
+	Prices []DataPoint
 }
 
 //Position is the representation of a traded position
@@ -31,38 +30,14 @@ type Position struct {
 	LiquidationPrice       float64
 }
 
-//AggregatedDataPoints is a group datapoints
-type AggregatedDataPoints struct {
-	Event
-	datapoints []DataPoint
-}
-
 //Required columns in the CSV file
 var csvColumns = []string{"open", "high", "low", "close", "volume"}
 
 //newDataHandler creates and initializes a DataHandler with pricing data and executes the required setup
 func newDataHandler(prices []DataPoint) *DataHandler {
 	return &DataHandler{
-		Prices:  prices,
-		Counter: 0,
+		Prices: prices,
 	}
-}
-
-//NextValue return  the next value in the stream of datapoints.
-//a nil return denotes the end for the stream
-func (handler *DataHandler) nextValue() *DataPoint {
-	if handler.Counter < len(handler.Prices) {
-		var price = &handler.Prices[handler.Counter]
-		handler.Counter++
-		return price
-	}
-	return nil
-}
-
-//SetWindow defines the range of values that will be available on each step through the data points
-func (handler *DataHandler) SetWindow(windowSize int) {
-	handler.WindowSize = windowSize
-	handler.Counter = windowSize
 }
 
 //PricesFromCSV reads all csv data in the OHLCV format to the DataHandler and returns if a error occurred
